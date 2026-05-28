@@ -1,0 +1,30 @@
+# Python
+__pycache__/
+*.py[cod]
+.Python
+.pytest_cache/
+.coverage
+.mypy_cache/
+.ruff_cache/
+
+# uv / venv
+.venv/
+.env
+
+# Distribution
+build/
+dist/
+*.egg-info/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+.Rhistory
+
+# Outputs (regenerate from scripts)
+figures/*.pdf
+figures/*.png
