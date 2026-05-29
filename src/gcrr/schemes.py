@@ -80,3 +80,66 @@ def gcrr_gc(S, K, T, r, sigma, n) -> TreeParameters:
     A_n = 2.0 * x / (sigma * np.sqrt(n * T))
     lam = (A_n + np.sqrt(A_n**2 + 4.0)) / 2.0
     return _gcrr_from_lambda(lam, S, K, T, r, sigma, n)
+
+
+def _tian_flexible_from_lambda(
+    lam: float, S: float, K: float, T: float, r: float, sigma: float, n: int
+) -> TreeParameters:
+    """Build Tian (1999) flexible-binomial TreeParameters from a given tilt.
+
+    Implements Tian (1999) eq. (6):
+        u = exp(sigma * sqrt(dt) + lam * sigma^2 * dt)
+        d = exp(-sigma * sqrt(dt) + lam * sigma^2 * dt)
+        p = (e^{r*dt} - d) / (u - d)
+
+    Note: Tian's "lambda" is a *tilt* parameter (additive shift in log-space),
+    structurally different from the GCRR *stretch* parameter (multiplicative
+    scaling of sqrt(dt) in the exponent). We store None in the TreeParameters
+    lam field to avoid confusion.
+    """
+    dt = T / n
+    sqrt_dt = np.sqrt(dt)
+    sigma2_dt = sigma * sigma * dt
+    R = np.exp(r * dt)
+    u = np.exp(sigma * sqrt_dt + lam * sigma2_dt)
+    d = np.exp(-sigma * sqrt_dt + lam * sigma2_dt)
+    p = (R - d) / (u - d)
+    return TreeParameters(u=u, d=d, p=p, n=n, dt=dt, R=R, lam=None)
+
+
+def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
+    """Tian (1999) strike-aligned flexible binomial.
+
+    Places the terminal node (n, j_0) exactly at the strike K by solving
+    Tian (1999) eqs. (11) and (13) for the tilt parameter lambda. Yields
+    smooth (essentially monotone) O(1/n) convergence and admits Richardson
+    extrapolation to O(1/n^2).
+
+    Procedure:
+        1. CRR baseline factors u_0 = e^{sigma*sqrt(dt)}, d_0 = 1/u_0.
+        2. Real-valued ideal up-count
+               eta = (log(K/S) - n*log(d_0)) / log(u_0/d_0)
+           (eq. 10), rounded to nearest integer j_0 (eq. 11).
+        3. Solve for the strike-aligning lambda (eq. 13):
+               lam = (log(K/S) - (2*j_0 - n)*sigma*sqrt(dt)) / (n*sigma^2*dt)
+        4. Return flexible parameters with that lambda.
+
+    Verified against Tian (1999) Tables I and II in the public option-pricing
+    repository (28 paper-reproduction tests pass to 4-6 decimal places).
+    """
+    dt = T / n
+    sqrt_dt = np.sqrt(dt)
+
+    # CRR baseline (eq. 8)
+    u_0 = np.exp(sigma * sqrt_dt)
+    d_0 = np.exp(-sigma * sqrt_dt)
+
+    # Ideal up-count (eq. 10) and nearest integer j_0 (eq. 11)
+    log_K_over_S = np.log(K / S)
+    eta = (log_K_over_S - n * np.log(d_0)) / np.log(u_0 / d_0)
+    j_0 = int(round(eta))
+
+    # Strike-aligning tilt (eq. 13)
+    lam_tilt = (log_K_over_S - (2 * j_0 - n) * sigma * sqrt_dt) / (n * sigma**2 * dt)
+
+    return _tian_flexible_from_lambda(lam_tilt, S, K, T, r, sigma, n)

@@ -85,3 +85,30 @@ def test_gcrr_fixed_lambda_one_equals_crr():
     assert p_crr.u == pytest.approx(p_fixed.u, rel=1e-14)
     assert p_crr.d == pytest.approx(p_fixed.d, rel=1e-14)
     assert p_crr.p == pytest.approx(p_fixed.p, rel=1e-14)
+
+
+def test_tian_1999_terminal_node_on_strike():
+    """Tian (1999) strike-alignment: some terminal node S*u^j*d^(n-j) equals K."""
+    n = 200
+    p = schemes.tian_1999(S, K, T, r, sigma, n)
+    # Find the j closest to the ideal up-count
+    j = np.arange(n + 1)
+    terminal_nodes = S * (p.u ** j) * (p.d ** (n - j))
+    # At least one terminal node should match the strike to high precision
+    min_distance = np.min(np.abs(terminal_nodes - K) / K)
+    assert min_distance < 1e-10, f"No terminal node hits the strike (min rel dist = {min_distance:.2e})"
+
+
+def test_tian_1999_converges_to_bs():
+    """Tian (1999) should converge to Black-Scholes."""
+    bs = bs_call(S, K, T, r, sigma)
+    p = schemes.tian_1999(S, K, T, r, sigma, n=2001)
+    price = binomial_price(S, K, T, r, p, "call", "european")
+    assert price == pytest.approx(bs, abs=1e-2)
+
+
+def test_tian_1999_lam_field_is_none():
+    """Tian's tilt parameter is conceptually distinct from GCRR's stretch;
+    the TreeParameters lam field should be None to avoid confusion."""
+    p = schemes.tian_1999(S, K, T, r, sigma, n=200)
+    assert p.lam is None

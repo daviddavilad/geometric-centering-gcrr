@@ -32,6 +32,22 @@ class TreeParameters:
     R: float
     lam: float | None = None
 
+    def __post_init__(self):
+        """Verify no-arbitrage condition d < R < u and p in (0, 1)."""
+        if self.u <= self.d:
+            raise ValueError(f"Require u > d, got u={self.u}, d={self.d}")
+        if not (self.d < self.R < self.u):
+            raise ValueError(
+                f"No-arbitrage violated: require d < R < u, "
+                f"got d={self.d}, R={self.R}, u={self.u}"
+            )
+        if not 0.0 < self.p < 1.0:
+            raise ValueError(f"Require p in (0, 1), got p={self.p}")
+        if self.dt <= 0:
+            raise ValueError(f"Require dt > 0, got dt={self.dt}")
+        if self.n <= 0:
+            raise ValueError(f"Require n > 0, got n={self.n}")
+
 
 def binomial_price(
     S: float,
