@@ -45,19 +45,25 @@ def gcrr_fixed(S, K, T, r, sigma, n, lam=1.1) -> TreeParameters:
 
 
 def gcrr_xpc(S, K, T, r, sigma, n) -> TreeParameters:
-    """GCRR-XPC (Chung-Shih 2007): strike on the central node. Requires n even.
+    """GCRR-XPC (Chung-Shih 2007): strike on the central terminal node.
 
-    lambda(n) from Chung-Shih eq. (23):
-        A      = 2 ln(X/S) / (sigma * sqrt(n*T))     [note: their A_n form]
-        lambda = ln(X/S)/(sigma*sqrt(n*T)) + sqrt( (2 ln(X/S)/(sigma*sqrt(n*T)))^2 + 4 ) / 2
+    Requires n even. The construction places the central terminal node
+    S * u^(n/2) * d^(n/2) exactly on the strike K.
 
-    NOTE: verify this against your handwritten derivation of eq. (23).
+    Taking logs of that condition and using h = T/n yields
+        lambda - 1/lambda = 2 log(K/S) / (sigma * sqrt(nT))  =:  A_n,
+    whose unique positive root is
+        lambda = (A_n + sqrt(A_n^2 + 4)) / 2.
+
+    This coincides algebraically with the GCRR-GC lambda at eta = 0 (even
+    phase). Kept as a separate function for intellectual provenance
+    (Chung-Shih 2007) and to enforce the even-n requirement.
     """
     if n % 2 != 0:
         raise ValueError(f"GCRR-XPC requires even n, got {n}")
     x = np.log(K / S)
-    a = x / (sigma * np.sqrt(n * T))
-    lam = a + np.sqrt((2 * a) ** 2 + 4) / 2.0  # placeholder form -- CONFIRM
+    A_n = 2.0 * x / (sigma * np.sqrt(n * T))
+    lam = (A_n + np.sqrt(A_n**2 + 4.0)) / 2.0
     return _gcrr_from_lambda(lam, S, K, T, r, sigma, n)
 
 
