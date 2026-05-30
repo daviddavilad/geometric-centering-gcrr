@@ -143,3 +143,47 @@ def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
     lam_tilt = (log_K_over_S - (2 * j_0 - n) * sigma * sqrt_dt) / (n * sigma**2 * dt)
 
     return _tian_flexible_from_lambda(lam_tilt, S, K, T, r, sigma, n)
+
+
+def joshi_2009(S, K, T, r, sigma, n) -> TreeParameters:
+    """Joshi (2009) odd-step centered tree.
+
+    A *drift-based* parameterization (structurally distinct from GCRR's
+    stretch and Tian's tilt). The drift mu shifts every step uniformly,
+    keeping the up/down log-step size symmetric at +/- sigma*sqrt(dt).
+
+    Construction (Joshi 2009, Sections 3-4):
+        mu = log(K/S0) / T              # places strike at log-center
+        u  = exp(mu*dt + sigma*sqrt(dt))
+        d  = exp(mu*dt - sigma*sqrt(dt))
+        p  = (e^{r*dt} - d) / (u - d)
+
+    Requires n odd; the construction's symmetry exploits the even number
+    of terminal nodes 2N+2 with the strike sitting exactly between
+    indices N and N+1. We use n directly when odd, and n+1 when even,
+    following the paper's convention.
+
+    The resulting tree admits a *complete* asymptotic expansion in 1/n
+    (no oscillating term), so Richardson extrapolation works cleanly.
+    Convergence rate: O(1/n) un-extrapolated, O(1/n^2) after one
+    Richardson step.
+
+    Reference: Joshi (2009), "Achieving Smooth Asymptotics for the
+    Prices of European Options in Binomial Trees."
+    """
+    # Enforce n odd; Joshi requires 2N+1 steps
+    n_eff = n if n % 2 == 1 else n + 1
+
+    dt = T / n_eff
+    sqrt_dt = np.sqrt(dt)
+    R = np.exp(r * dt)
+
+    # Strike-centering drift (Joshi Section 4)
+    mu = np.log(K / S) / T
+
+    # Symmetric step around the mu-drift center
+    u = np.exp(mu * dt + sigma * sqrt_dt)
+    d = np.exp(mu * dt - sigma * sqrt_dt)
+    p = (R - d) / (u - d)
+
+    return TreeParameters(u=u, d=d, p=p, n=n_eff, dt=dt, R=R, lam=None)

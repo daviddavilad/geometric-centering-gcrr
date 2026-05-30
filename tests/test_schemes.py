@@ -112,3 +112,42 @@ def test_tian_1999_lam_field_is_none():
     the TreeParameters lam field should be None to avoid confusion."""
     p = schemes.tian_1999(S, K, T, r, sigma, n=200)
     assert p.lam is None
+
+
+def test_joshi_2009_strike_at_log_center():
+    """Joshi (2009): strike must sit at the log-midpoint of the two central
+    terminal nodes, i.e. log(K) = (log S_{N} + log S_{N+1}) / 2."""
+    n = 201  # odd
+    p = schemes.joshi_2009(S, K, T, r, sigma, n)
+    N = (n - 1) // 2  # = 100
+    log_S_N = np.log(S) + N * np.log(p.u) + (n - N) * np.log(p.d)
+    log_S_Np1 = np.log(S) + (N + 1) * np.log(p.u) + (n - N - 1) * np.log(p.d)
+    log_midpoint = (log_S_N + log_S_Np1) / 2.0
+    assert log_midpoint == pytest.approx(np.log(K), abs=1e-10)
+
+
+def test_joshi_2009_forces_odd_n():
+    """Joshi's construction is for odd n; even input should be bumped to n+1."""
+    p = schemes.joshi_2009(S, K, T, r, sigma, n=200)
+    assert p.n == 201
+    assert p.n % 2 == 1
+
+
+def test_joshi_2009_converges_to_bs():
+    """Joshi (2009) converges to Black-Scholes."""
+    bs = bs_call(S, K, T, r, sigma)
+    p = schemes.joshi_2009(S, K, T, r, sigma, n=2001)
+    price = binomial_price(S, K, T, r, p, "call", "european")
+    assert price == pytest.approx(bs, abs=1e-2)
+
+
+def test_joshi_2009_drift_visible_in_jumps():
+    """Sanity check: the drift mu = log(K/S)/T should be visible as
+    the average of log(u) and log(d), specifically (log u + log d)/2 = mu*dt.
+    This distinguishes Joshi from CRR (where the average is 0) and from
+    GCRR-style schemes (where the average is something else entirely)."""
+    n = 201
+    p = schemes.joshi_2009(S, K, T, r, sigma, n)
+    mu = np.log(K / S) / T
+    average_log_jump = (np.log(p.u) + np.log(p.d)) / 2.0
+    assert average_log_jump == pytest.approx(mu * p.dt, rel=1e-12)
