@@ -70,3 +70,41 @@ def test_crr_scaled_error_does_not_stabilize():
     assert crr_std > 0.5, (
         f"CRR scaled error didn't scatter as expected: max-std = {crr_std:.4f}"
     )
+
+
+def test_tian_1999_has_step_discontinuities_otm():
+    """Tian (1999) strike-aligned scheme has discontinuities in n where the
+    nearest-integer j_0 = round(eta) jumps. The scaled-error sequence is
+    therefore piecewise-smooth but not continuous in n.
+    
+    GCRR-GC avoids this because its lambda formula contains no integer
+    rounding -- lambda(n) = (A_n + sqrt(A_n^2 + 4))/2 is continuous in n.
+    
+    Test: compute successive scaled-error differences. Tian's series
+    should have at least a few large jumps in [50, 500]; GCRR-GC's
+    should not.
+    """
+    K_otm = 105.0  # OTM, where Tian's j_0 transitions are visible
+    n_values = np.arange(50, 501)
+
+    out_tian = phase_separated_errors(S, K_otm, T, r, sigma, schemes.tian_1999, n_values)
+    out_gc = phase_separated_errors(S, K_otm, T, r, sigma, schemes.gcrr_gc, n_values)
+
+    # Successive differences in scaled error, within the even-n phase.
+    # Tian: should see at least 2 jumps of size > 0.05 (the visible steps).
+    # GCRR-GC: max successive diff should be much smaller.
+    tian_diffs = np.abs(np.diff(out_tian.scaled_err_even))
+    gc_diffs = np.abs(np.diff(out_gc.scaled_err_even))
+
+    large_jumps_tian = np.sum(tian_diffs > 0.05)
+    assert large_jumps_tian >= 2, (
+        f"Expected >=2 large jumps in Tian's even-n scaled error at K=105, "
+        f"found {large_jumps_tian}"
+    )
+
+    # GCRR-GC should be smooth -- no jumps above 0.05.
+    max_gc_jump = np.max(gc_diffs)
+    assert max_gc_jump < 0.05, (
+        f"GCRR-GC's even-n scaled error should be smooth in n at K=105, "
+        f"but max successive diff = {max_gc_jump:.4f}"
+    )

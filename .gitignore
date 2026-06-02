@@ -25,6 +25,3 @@ dist/
 .DS_Store
 .Rhistory
 
-# Outputs (regenerate from scripts)
-figures/*.pdf
-figures/*.png

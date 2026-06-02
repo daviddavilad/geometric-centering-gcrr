@@ -49,28 +49,24 @@ def phase_separated_errors(
     T: float,
     r: float,
     sigma: float,
-    scheme,  # callable: (S, K, T, r, sigma, n) -> TreeParameters
+    scheme,
     n_values: np.ndarray,
     option_type: str = "call",
 ) -> PhaseSeparatedErrors:
     """Compute pricing errors across a sweep of n, separated by parity.
 
-    Args:
-        S, K, T, r, sigma: Market and contract parameters.
-        scheme: A scheme function from gcrr.schemes.
-        n_values: 1D array of n's at which to price.
-        option_type: 'call' or 'put'.
+    Uses the *effective* n actually consumed by the pricer for both the
+    scaled-error coefficient AND the parity partition. This matters for
+    schemes that enforce a parity (e.g. Joshi 2009 forces n odd by
+    bumping even requests to n+1): without this, even-n requests to
+    Joshi would appear under "even" with a scaled error computed at the
+    underlying odd n, producing misleading duplicate points.
 
-    Returns:
-        PhaseSeparatedErrors dataclass.
-
-    Notes:
-        - Joshi (2009) bumps even n to n+1 internally; we use the *requested*
-          n for parity assignment (a request at n=200 lands in n_even with
-          err computed at the effective n=201, which is a small but worth-
-          knowing convention).
-        - For Black-Scholes reference: dividend yield q=0 throughout
-          (consistent with the schemes that don't take q).
+    Trade-off: if the user passes n_values = arange(50, 500), and the
+    scheme bumps every even n by 1, the returned n_odd will contain
+    duplicates (each even n bumped to the same odd n+1 as the next odd
+    request). We de-duplicate after the fact by keeping the first
+    occurrence of each effective n.
     """
     if option_type == "call":
         bs_ref = bs_call(S, K, T, r, sigma)
@@ -79,21 +75,32 @@ def phase_separated_errors(
     else:
         raise ValueError(f"option_type must be 'call' or 'put', got {option_type!r}")
 
-    errs = np.empty(len(n_values), dtype=float)
-    for i, n in enumerate(n_values):
+    # Price each requested n and record the effective n that the scheme used.
+    n_eff_list = []
+    err_list = []
+    for n in n_values:
         params = scheme(S, K, T, r, sigma, int(n))
         price = binomial_price(S, K, T, r, params, option_type, "european")
-        errs[i] = price - bs_ref
+        n_eff_list.append(params.n)
+        err_list.append(price - bs_ref)
 
-    n_arr = np.asarray(n_values)
-    even_mask = (n_arr % 2 == 0)
+    n_eff = np.asarray(n_eff_list)
+    errs = np.asarray(err_list)
+
+    # De-duplicate: keep first occurrence of each effective n.
+    _, unique_idx = np.unique(n_eff, return_index=True)
+    unique_idx = np.sort(unique_idx)  # preserve original order
+    n_eff = n_eff[unique_idx]
+    errs = errs[unique_idx]
+
+    even_mask = (n_eff % 2 == 0)
     odd_mask = ~even_mask
 
     return PhaseSeparatedErrors(
-        n_even=n_arr[even_mask],
-        n_odd=n_arr[odd_mask],
+        n_even=n_eff[even_mask],
+        n_odd=n_eff[odd_mask],
         err_even=errs[even_mask],
         err_odd=errs[odd_mask],
-        scaled_err_even=n_arr[even_mask] * errs[even_mask],
-        scaled_err_odd=n_arr[odd_mask] * errs[odd_mask],
+        scaled_err_even=n_eff[even_mask] * errs[even_mask],
+        scaled_err_odd=n_eff[odd_mask] * errs[odd_mask],
     )
