@@ -11,6 +11,11 @@ Definitions (GCRR-GC draft Section 1):
     J_n(X)      = weak upper neighboring index = ceil(gamma_n).
                   The smallest integer j with S * u^j * d^(n-j) >= K.
 
+    J_n^+(X)    = strict upper neighboring index. The smallest integer j
+                  with S * u^j * d^(n-j) > K. Differs from J_n only when
+                  the strike sits exactly on a terminal node, in which
+                  case J_n^+ = J_n + 1.
+
     theta_n(X)  = J_n - gamma_n in [0, 1). Fractional log-distance from
                   the strike to the next node above, normalized by the
                   lattice spacing.
@@ -41,6 +46,7 @@ class StrikeLocation:
     """Strike-location coordinates for one tree."""
     gamma: float   # continuous strike index
     J: int         # weak upper neighboring index = ceil(gamma)
+    J_strict: int  # strict upper neighboring index (S * u^j * d^(n-j) > K)
     theta: float   # J - gamma, in [0, 1)
     Delta: float   # 1 - 2*theta, in (-1, 1]
 
@@ -91,7 +97,20 @@ def strike_location(S: float, K: float, params: TreeParameters) -> StrikeLocatio
     theta = J - gamma
     Delta = 1.0 - 2.0 * theta
 
-    return StrikeLocation(gamma=gamma, J=J, theta=theta, Delta=Delta)
+    # Strict upper neighbor: smallest j with S * u^j * d^(n-j) > K (strict
+    # inequality). Equals J when the strike is strictly between nodes
+    # (gamma non-integer). When the strike sits exactly on a node (gamma
+    # integer, which is what the snap-to-integer above detects), the node
+    # at j = gamma satisfies S * u^j * d^(n-j) = K, not > K, so the
+    # strict threshold steps up to gamma + 1.
+    if gamma == math.floor(gamma):  # gamma is integer => strike on node
+        J_strict = int(gamma) + 1
+    else:
+        J_strict = J
+
+    return StrikeLocation(
+        gamma=gamma, J=J, J_strict=J_strict, theta=theta, Delta=Delta
+    )
 
 
 def strike_location_sweep(
@@ -123,6 +142,7 @@ def strike_location_sweep(
     """
     gammas = np.empty(len(n_values), dtype=float)
     Js = np.empty(len(n_values), dtype=int)
+    J_stricts = np.empty(len(n_values), dtype=int)
     thetas = np.empty(len(n_values), dtype=float)
     Deltas = np.empty(len(n_values), dtype=float)
 
@@ -131,7 +151,8 @@ def strike_location_sweep(
         loc = strike_location(S, K, params)
         gammas[i] = loc.gamma
         Js[i] = loc.J
+        J_stricts[i] = loc.J_strict
         thetas[i] = loc.theta
         Deltas[i] = loc.Delta
 
-    return {"gamma": gammas, "J": Js, "theta": thetas, "Delta": Deltas}
+    return {"gamma": gammas, "J": Js, "J_strict": J_stricts, "theta": thetas, "Delta": Deltas}

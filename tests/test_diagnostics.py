@@ -91,3 +91,27 @@ def test_sweep_returns_correct_shape():
     out = strike_location_sweep(S, K, T, r, sigma, schemes.crr, n_values)
     for key in ("gamma", "J", "theta", "Delta"):
         assert len(out[key]) == len(n_values)
+
+
+def test_gcrr_gc_strict_threshold_is_uniformly_N_plus_1():
+    """For GCRR-GC, J_n^+ = N + 1 across all n (the unified strict
+    threshold claim of GCRR-GC draft Section 9.2).
+
+    This holds for both parities:
+    - Even n (eta=0): strike sits exactly on node N, so J_n = N (weak)
+      and J_n^+ = N + 1 (strict).
+    - Odd n (eta=1): strike sits between nodes N and N+1, so
+      J_n = J_n^+ = N + 1.
+
+    The contrast with CRR (where J_n^+ - N varies with n) is what
+    Figure 3 of the paper visualizes.
+    """
+    S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20
+    n_values = np.arange(50, 250)
+    out = strike_location_sweep(S, K, T, r, sigma, schemes.gcrr_gc, n_values)
+    N_arr = (n_values - n_values % 2) // 2
+    threshold = out["J_strict"] - N_arr
+    np.testing.assert_array_equal(
+        threshold, np.ones(len(n_values), dtype=int),
+        err_msg="GCRR-GC's strict upper threshold J_n^+ - N is not uniformly 1"
+    )
