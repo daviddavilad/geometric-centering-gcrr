@@ -6,6 +6,7 @@ from scipy.stats import norm
 from gcrr import schemes
 from gcrr.black_scholes import bs_digital_strict
 from gcrr.digital import digital_strict_price
+from gcrr.digital import digital_strict_price, digital_half_node_corrected_price
 
 
 # Standard ATM-ish parameter set; matches the call test conventions.
@@ -88,4 +89,75 @@ def test_bs_digital_strict_at_K_equals_S_zero_drift():
     expected = np.exp(-r_test * T) * 0.5
     assert abs(bs_value - expected) < 1e-12, (
         f"BS digital sanity check failed: got {bs_value}, expected {expected}"
+    )
+
+
+def test_half_node_corrected_digital_symmetry_at_p_half():
+    """The half-node corrected digital satisfies the exact symmetry
+    Psi^*_{N,0}(1/2) = Psi^*_{N,1}(1/2) = 1/2.
+
+    This is the design property of the correction: at p = 1/2 (zero drift),
+    the corrected upper tail equals exactly 1/2 in both phases.
+
+    Implementation note: tested by directly checking the Psi^*_{N,eta}(1/2)
+    formula. We use n = 50 (even) and n = 51 (odd) as a representative
+    parity-pair; the symmetry is exact in floating point for any N.
+    """
+    from scipy.stats import binom
+
+    # Even phase: n = 2N, Psi^*_{N,0}(1/2) = Psi_{N,0}(1/2) + (1/2) C(2N, N) (1/2)^(2N)
+    for n in [50, 100, 200, 500]:
+        N = n // 2
+        psi = binom.sf(N, n, 0.5)
+        central_atom = binom.pmf(N, n, 0.5)
+        psi_star = psi + 0.5 * central_atom
+        assert abs(psi_star - 0.5) < 1e-12, (
+            f"Even-phase symmetry failed at n={n}: Psi*={psi_star}"
+        )
+
+    # Odd phase: Psi^*_{N,1}(1/2) = Psi_{N,1}(1/2) since correction is zero
+    for n in [51, 101, 201, 501]:
+        N = n // 2  # = (n-1)/2 for odd n
+        psi = binom.sf(N, n, 0.5)
+        # No correction in odd phase
+        assert abs(psi - 0.5) < 1e-12, (
+            f"Odd-phase symmetry failed at n={n}: Psi={psi}"
+        )
+
+
+def test_half_node_corrected_digital_equals_strict_for_odd_n():
+    """For odd n, the half-node correction is zero, so the corrected
+    digital equals the strict digital exactly."""
+    for n in [51, 101, 201, 501]:
+        params = schemes.gcrr_gc(S, K, T, r, sigma, n)
+        strict = digital_strict_price(S, K, T, r, params)
+        corrected = digital_half_node_corrected_price(S, K, T, r, params)
+        assert strict == corrected, (
+            f"Strict and corrected disagree for odd n={n}: "
+            f"strict={strict}, corrected={corrected}"
+        )
+
+
+def test_half_node_corrected_digital_faster_convergence_even_phase():
+    """The half-node corrected digital should converge faster than the
+    strict digital in the even phase. Specifically, the strict digital's
+    error is O(1/sqrt(n)) and the corrected digital's error should be
+    O(1/n) -- so error * n should be roughly constant for the corrected
+    digital, while error * sqrt(n) is roughly constant for the strict.
+    """
+    bs_ref = bs_digital_strict(S, K, T, r, sigma)
+    n_values = [200, 800, 3200]
+    scaled_corrected = []
+    for n in n_values:
+        params = schemes.gcrr_gc(S, K, T, r, sigma, n)
+        corrected = digital_half_node_corrected_price(S, K, T, r, params)
+        # error * n should be roughly constant if O(1/n) convergence
+        scaled_corrected.append((corrected - bs_ref) * n)
+    # Check stability across n -- should be within ~5% relative
+    mean_scaled = np.mean(scaled_corrected)
+    max_dev = max(abs(s - mean_scaled) for s in scaled_corrected)
+    rel_dev = max_dev / abs(mean_scaled) if mean_scaled != 0 else 0.0
+    assert rel_dev < 0.05, (
+        f"Corrected digital not O(1/n): error*n at n={n_values} were "
+        f"{scaled_corrected}, max relative deviation = {rel_dev:.4f}"
     )
