@@ -12,12 +12,11 @@ lambda = 1.1) is included as the control. CRR (lambda = 1) is the
 baseline. GCRR-GC (lambda chosen by the geometric-center equation)
 is the proposed construction.
 
-Generates two figures:
-    figures/raw_errors_itm.{pdf,png}  -- K = 95  (ITM)
-    figures/raw_errors_otm.{pdf,png}  -- K = 105 (OTM)
+Generates one figure (Chen §9.4 base case):
+    figures/raw_errors_atm.{pdf,png}  -- K = 100 (ATM)
 
-Test case: European call.
-    S = 100, T = 0.5, r = 0.06, sigma = 0.20.
+Test case (Chen §9.4 base case): European call.
+    S = 100, K = 100, T = 1, r = 0.05, sigma = 0.20.
 """
 from pathlib import Path
 
@@ -31,14 +30,15 @@ from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
 # --- Fixed parameters ---
-S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(50, 501)
+S, T, r, sigma = 100.0, 1.0, 0.05, 0.20  # Chen §9.4 base case
+N_VALUES = np.arange(25, 1001)
 
 SCHEMES = [
-    ("crr",          schemes.crr),
-    ("gcrr_fixed",   schemes.gcrr_fixed),
-    ("gcrr_gc",      schemes.gcrr_gc),
+    ("crr",          schemes.crr,         20),  # background
+    ("gcrr_fixed",   schemes.gcrr_fixed,  10),
+    ("gcrr_gc",      schemes.gcrr_gc,      3),  # foreground
 ]
+# Format: (key, fn, marker_size)
 
 
 def make_figure(K: float, moneyness_tag: str, out_dir: Path):
@@ -46,7 +46,7 @@ def make_figure(K: float, moneyness_tag: str, out_dir: Path):
     C_BS = bs_call(S, K, T, r, sigma)
 
     results = {}
-    for key, scheme_fn in SCHEMES:
+    for key, scheme_fn, _ in SCHEMES:
         errs = np.empty(len(N_VALUES))
         for i, n in enumerate(N_VALUES):
             params = scheme_fn(S, K, T, r, sigma, int(n))
@@ -56,13 +56,13 @@ def make_figure(K: float, moneyness_tag: str, out_dir: Path):
 
     fig, ax = plt.subplots(figsize=(10, 5.5))
 
-    for key, _ in SCHEMES:
+    for key, _, size in SCHEMES:
         color = SCHEME_COLORS[key]
         label = SCHEME_LABELS[key]
-        ax.plot(
+        ax.scatter(
             N_VALUES, results[key],
-            color=color, marker="o", markersize=2.5,
-            linewidth=0.7, alpha=0.85, label=label,
+            color=color, marker="o", s=size,
+            alpha=0.85, label=label, edgecolors="none",
         )
 
     ax.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)
@@ -91,8 +91,7 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
-    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
+    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

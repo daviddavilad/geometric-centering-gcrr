@@ -1,4 +1,4 @@
-"""Strict digital errors for CRR, GCRR-GC, and Joshi (2009).
+"""Strict digital errors for GCRR-GC and Joshi (2009).
 
 For each scheme, plots the raw error D^>_{N,eta} - D_BS against n,
 separated by parity. The strict digital pays 1 if S_T > K, 0 otherwise,
@@ -20,9 +20,8 @@ Figure 5 (forthcoming) will show the half-node corrected digital,
 which removes the even-phase central-atom term and is expected to
 restore O(1/n) convergence in both phases.
 
-Generates two figures:
-    figures/digital_errors_itm.{pdf,png}  -- K = 95  (ITM)
-    figures/digital_errors_otm.{pdf,png}  -- K = 105 (OTM)
+Generates one figure (Chen §9.4 base case):
+    figures/digital_errors_atm.{pdf,png}  -- K = 100 (ATM)
 """
 from pathlib import Path
 
@@ -35,14 +34,15 @@ from gcrr.digital import digital_strict_price
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Fixed parameters ---
-S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(50, 501)
+# --- Fixed parameters (Chen §9.4 base case) ---
+S, T, r, sigma = 100.0, 1.0, 0.05, 0.20
+N_VALUES = np.arange(25, 1001)
 
 SCHEMES = [
-    ("gcrr_gc",     schemes.gcrr_gc),
-    ("joshi_2009",  schemes.joshi_2009),
+    ("joshi_2009",  schemes.joshi_2009, 10),  # background
+    ("gcrr_gc",     schemes.gcrr_gc,     3),  # foreground
 ]
+# Format: (key, fn, marker_size)
 
 
 def compute_phase_separated_digital_errors(K, scheme_fn, n_values):
@@ -86,30 +86,30 @@ def make_figure(K, moneyness_tag, out_dir):
     """Two-panel phase-separated digital-error figure at a given strike."""
     results = {
         key: compute_phase_separated_digital_errors(K, fn, N_VALUES)
-        for key, fn in SCHEMES
+        for key, fn, _ in SCHEMES
     }
 
     # Side-by-side panels with INDEPENDENT y-axes -- the phase asymmetry
     # (~3 orders of magnitude at large n) makes shared y-axes unreadable.
     fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(12, 5))
 
-    for key, _ in SCHEMES:
+    for key, _, size in SCHEMES:
         out = results[key]
         color = SCHEME_COLORS[key]
         label = SCHEME_LABELS[key]
-        # Even panel: all schemes contribute except Joshi (odd-only)
+        # Even panel: GCRR-GC only (Joshi is odd-only)
         if len(out["n_even"]) > 0:
-            ax_even.plot(
+            ax_even.scatter(
                 out["n_even"], out["err_even"],
-                color=color, marker="o", markersize=2.5,
-                linewidth=0.8, alpha=0.85, label=label,
+                color=color, marker="o", s=size,
+                alpha=0.85, edgecolors="none",
             )
-        # Odd panel: all schemes contribute
+        # Odd panel: both schemes
         if len(out["n_odd"]) > 0:
-            ax_odd.plot(
+            ax_odd.scatter(
                 out["n_odd"], out["err_odd"],
-                color=color, marker="o", markersize=2.5,
-                linewidth=0.8, alpha=0.85, label=label,
+                color=color, marker="o", s=size,
+                alpha=0.85, label=label, edgecolors="none",
             )
 
     for ax in (ax_even, ax_odd):
@@ -120,7 +120,7 @@ def make_figure(K, moneyness_tag, out_dir):
     ax_odd.set_title(r"Odd $n$")
     ax_even.set_ylabel(r"$D^>_{N,\eta} - D_{BS}$")
 
-    # Legend on the odd panel (where all three schemes appear)
+    # Legend on the odd panel (where both schemes appear)
     ax_odd.legend(loc="best", framealpha=0.9)
 
     fig.suptitle(
@@ -144,8 +144,7 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
-    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
+    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

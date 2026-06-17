@@ -29,18 +29,19 @@ from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Parameters ---
-S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
-N_VALUES = np.arange(50, 501)
+# --- Parameters (Chen §9.4 base case) ---
+S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20
+N_VALUES = np.arange(25, 1001)
 
 # Same scheme/marker setup as figure_delta_diagnostic.py so the two
 # figures share visual vocabulary.
 SCHEMES = [
-    ("crr",          schemes.crr,         "o", 8,  True,  0.5),   # filled circle
-    ("tian_1999",    schemes.tian_1999,   "s", 60, False, 0.9),   # open square
-    ("joshi_2009",   schemes.joshi_2009,  "^", 60, False, 0.9),   # open triangle
-    ("gcrr_gc",      schemes.gcrr_gc,     "D", 18, True,  0.9),   # filled diamond
+    ("crr",          schemes.crr,         20),  # background
+    ("tian_1999",    schemes.tian_1999,   10),
+    ("joshi_2009",   schemes.joshi_2009,  10),
+    ("gcrr_gc",      schemes.gcrr_gc,      1),  # foreground
 ]
+# Format: (key, fn, marker_size)
 
 
 def main():
@@ -48,7 +49,7 @@ def main():
 
     results = {
         key: strike_location_sweep(S, K, T, r, sigma, fn, N_VALUES)
-        for key, fn, *_ in SCHEMES
+        for key, fn, _ in SCHEMES
     }
 
     # Compute N for each n (parity-aware)
@@ -59,22 +60,15 @@ def main():
     )
 
     # Top panel: Delta_n
-    for key, _, marker, size, filled, alpha in SCHEMES:
+    for key, _, size in SCHEMES:
         out = results[key]
         color = SCHEME_COLORS[key]
         label = SCHEME_LABELS[key]
-        if filled:
-            ax_top.scatter(
-                N_VALUES, out["Delta"],
-                color=color, marker=marker, s=size,
-                alpha=alpha, label=label, edgecolors="none",
-            )
-        else:
-            ax_top.scatter(
-                N_VALUES, out["Delta"],
-                facecolors="none", edgecolors=color, marker=marker, s=size,
-                linewidths=1.0, alpha=alpha, label=label,
-            )
+        ax_top.scatter(
+            N_VALUES, out["Delta"],
+            color=color, marker="o", s=size,
+            alpha=0.85, label=label, edgecolors="none",
+        )
 
     # Reference lines on top panel
     ax_top.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)
@@ -84,23 +78,15 @@ def main():
     ax_top.set_ylim(-1.15, 1.15)
 
     # Bottom panel: J_n^+ - N
-    for key, _, marker, size, filled, alpha in SCHEMES:
+    for key, _, size in SCHEMES:
         out = results[key]
         color = SCHEME_COLORS[key]
-        label = SCHEME_LABELS[key]
         threshold = out["J_strict"] - N_arr
-        if filled:
-            ax_bot.scatter(
-                N_VALUES, threshold,
-                color=color, marker=marker, s=size,
-                alpha=alpha, edgecolors="none",
-            )
-        else:
-            ax_bot.scatter(
-                N_VALUES, threshold,
-                facecolors="none", edgecolors=color, marker=marker, s=size,
-                linewidths=1.0, alpha=alpha,
-            )
+        ax_bot.scatter(
+            N_VALUES, threshold,
+            color=color, marker="o", s=size,
+            alpha=0.85, edgecolors="none",
+        )
 
     # Reference line at the "unified threshold" value of 1
     ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")

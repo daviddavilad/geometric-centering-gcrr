@@ -23,9 +23,8 @@ behavior (verified in tests/test_digital.py):
 The visual contrast with Figure 4 is the empirical evidence for the
 central-atom story of Section 9.3.
 
-Generates two figures:
-    figures/digital_corrected_errors_itm.{pdf,png}  -- K = 95  (ITM)
-    figures/digital_corrected_errors_otm.{pdf,png}  -- K = 105 (OTM)
+Generates one figure (Chen §9.4 base case):
+    figures/digital_corrected_errors_atm.{pdf,png}  -- K = 100 (ATM)
 """
 from pathlib import Path
 
@@ -39,13 +38,14 @@ from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
 # --- Fixed parameters ---
-S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(50, 501)
+S, T, r, sigma = 100.0, 1.0, 0.05, 0.20  # Chen §9.4 base case
+N_VALUES = np.arange(25, 1001)
 
 SCHEMES = [
-    ("gcrr_gc",     schemes.gcrr_gc),
-    ("joshi_2009",  schemes.joshi_2009),
+    ("joshi_2009",  schemes.joshi_2009, 10),  # background
+    ("gcrr_gc",     schemes.gcrr_gc,     3),  # foreground
 ]
+# Format: (key, fn, marker_size)
 
 
 def compute_phase_separated_corrected_errors(K, scheme_fn, n_values):
@@ -93,27 +93,27 @@ def make_figure(K, moneyness_tag, out_dir):
     """Two-panel phase-separated corrected-digital-error figure at a given strike."""
     results = {
         key: compute_phase_separated_corrected_errors(K, fn, N_VALUES)
-        for key, fn in SCHEMES
+        for key, fn, _ in SCHEMES
     }
 
     # Side-by-side panels with INDEPENDENT y-axes -- same convention as Figure 4.
     fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(12, 5))
 
-    for key, _ in SCHEMES:
+    for key, _, size in SCHEMES:
         out = results[key]
         color = SCHEME_COLORS[key]
         label = SCHEME_LABELS[key]
         if len(out["n_even"]) > 0:
-            ax_even.plot(
+            ax_even.scatter(
                 out["n_even"], out["err_even"],
-                color=color, marker="o", markersize=2.5,
-                linewidth=0.8, alpha=0.85, label=label,
+                color=color, marker="o", s=size,
+                alpha=0.85, edgecolors="none",
             )
         if len(out["n_odd"]) > 0:
-            ax_odd.plot(
+            ax_odd.scatter(
                 out["n_odd"], out["err_odd"],
-                color=color, marker="o", markersize=2.5,
-                linewidth=0.8, alpha=0.85, label=label,
+                color=color, marker="o", s=size,
+                alpha=0.85, label=label, edgecolors="none",
             )
 
     for ax in (ax_even, ax_odd):
@@ -148,8 +148,7 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
-    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
+    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

@@ -16,6 +16,18 @@ Observations from this figure:
       to -1 at j_0 transitions. Same n-pattern as CRR's wraparounds.
     - Joshi (2009): Delta = 0 for every odd n (its only domain).
     - GCRR-GC: Delta = 1 for even n, Delta = 0 for odd n. Parity-locked.
+    
+    Observations at the Chen §9.4 base case (ATM, K=S=100):
+    - At ATM, the strike sits at the geometric center of the lattice for
+      every centered scheme, so Delta = +1 for even n and Delta = 0 for odd
+      n across CRR, Tian (mostly), Joshi, and GCRR-GC. CRR coincides with
+      the centered schemes here because the geometric-center condition
+      lambda = 1 reduces to standard CRR at K = S.
+    - The saw-tooth oscillation of Delta that motivates the figure at
+      off-center strikes (e.g., K = 105) does not appear at ATM. See
+      figures/delta_diagnostic_K105.pdf for the OTM version.
+    - Tian still shows brief excursions to Delta = +1 at j_0 transitions,
+      consistent with its step-discontinuity structure.
 
 The figure uses markers only (no connecting lines) because connecting
 alternating-parity data points produces spurious vertical sweeps.
@@ -30,50 +42,41 @@ from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Parameters ---
-S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
-N_VALUES = np.arange(50, 501)
+# --- Parameters (Chen §9.4 base case) ---
+S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20
+N_VALUES = np.arange(25, 1001)
 
 # Plot in this order so overlapping schemes are visible: bottom to top.
 # CRR plotted first (background) since it spans the widest range;
 # the centered schemes drawn over it with distinct markers.
 SCHEMES = [
-    ("crr",          schemes.crr,         "o", 8,  True,  0.5),   # filled circle
-    ("tian_1999",    schemes.tian_1999,   "s", 60, False, 0.9),   # open square (no fill)
-    ("joshi_2009",   schemes.joshi_2009,  "^", 60, False, 0.9),   # open triangle
-    ("gcrr_gc",      schemes.gcrr_gc,     "D", 18, True,  0.9),   # filled diamond
+    ("crr",          schemes.crr,         20),  # background
+    ("tian_1999",    schemes.tian_1999,   10),
+    ("joshi_2009",   schemes.joshi_2009,  10),
+    ("gcrr_gc",      schemes.gcrr_gc,      1),  # foreground
 ]
-# Format: (key, fn, marker, size, filled, alpha)
+# Format: (key, fn, marker_size)
 
 
 def main():
     set_style()
 
     results = {
-    key: strike_location_sweep(S, K, T, r, sigma, fn, N_VALUES)
-    for key, fn, *_ in SCHEMES  # <-- *_ catches everything after fn
+        key: strike_location_sweep(S, K, T, r, sigma, fn, N_VALUES)
+        for key, fn, _ in SCHEMES
     }
 
     fig, ax = plt.subplots(figsize=(11, 5.5))
 
-    for key, _, marker, size, filled, alpha in SCHEMES:
+    for key, _, size in SCHEMES:
         out = results[key]
         color = SCHEME_COLORS[key]
         label = SCHEME_LABELS[key]
-        if filled:
-            ax.scatter(
-                N_VALUES, out["Delta"],
-                color=color, marker=marker, s=size,
-                alpha=alpha, label=label, edgecolors="none",
-            )
-        else:
-            # Open markers: visible outline, no fill, so stacked points
-            # show through.
-            ax.scatter(
-                N_VALUES, out["Delta"],
-                facecolors="none", edgecolors=color, marker=marker, s=size,
-                linewidths=1.0, alpha=alpha, label=label,
-            )
+        ax.scatter(
+            N_VALUES, out["Delta"],
+            color=color, marker="o", s=size,
+            alpha=0.85, label=label, edgecolors="none",
+        )
 
     # Reference lines at the geometrically meaningful values of Delta
     ax.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)
