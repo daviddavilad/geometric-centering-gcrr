@@ -23,8 +23,9 @@ behavior (verified in tests/test_digital.py):
 The visual contrast with Figure 4 is the empirical evidence for the
 central-atom story of Section 9.3.
 
-Generates one figure (Chen §9.4 base case):
-    figures/digital_corrected_errors_atm.{pdf,png}  -- K = 100 (ATM)
+Generates two figures:
+    figures/digital_corrected_errors_itm.{pdf,png}  -- K = 95  (ITM)
+    figures/digital_corrected_errors_otm.{pdf,png}  -- K = 105 (OTM)
 """
 from pathlib import Path
 
@@ -38,8 +39,8 @@ from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
 # --- Fixed parameters ---
-S, T, r, sigma = 100.0, 1.0, 0.05, 0.20  # Chen §9.4 base case
-N_VALUES = np.arange(25, 1001)
+S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
+N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 SCHEMES = [
     ("joshi_2009",  schemes.joshi_2009, 10),  # background
@@ -148,7 +149,8 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
+    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
+    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

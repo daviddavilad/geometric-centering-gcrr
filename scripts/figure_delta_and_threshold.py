@@ -29,9 +29,9 @@ from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Parameters (Chen §9.4 base case) ---
-S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20
-N_VALUES = np.arange(25, 1001)
+# --- Parameters (Chen §9.4 primary non-ATM case) ---
+S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
+N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 # Same scheme/marker setup as figure_delta_diagnostic.py so the two
 # figures share visual vocabulary.

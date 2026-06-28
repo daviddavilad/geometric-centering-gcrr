@@ -12,11 +12,13 @@ lambda = 1.1) is included as the control. CRR (lambda = 1) is the
 baseline. GCRR-GC (lambda chosen by the geometric-center equation)
 is the proposed construction.
 
-Generates one figure (Chen §9.4 base case):
-    figures/raw_errors_atm.{pdf,png}  -- K = 100 (ATM)
+Generates two figures:
+    figures/raw_errors_itm.{pdf,png}  -- K = 95  (ITM)
+    figures/raw_errors_otm.{pdf,png}  -- K = 105 (OTM)
 
-Test case (Chen §9.4 base case): European call.
-    S = 100, K = 100, T = 1, r = 0.05, sigma = 0.20.
+Test case: European call.
+    S = 100, T = 0.5, r = 0.06, sigma = 0.20.
+    (Primary non-ATM cases per Chen §9.4 revised draft.)
 """
 from pathlib import Path
 
@@ -30,8 +32,8 @@ from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
 # --- Fixed parameters ---
-S, T, r, sigma = 100.0, 1.0, 0.05, 0.20  # Chen §9.4 base case
-N_VALUES = np.arange(25, 1001)
+S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
+N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 SCHEMES = [
     ("crr",          schemes.crr,         20),  # background
@@ -91,7 +93,8 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
+    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
+    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

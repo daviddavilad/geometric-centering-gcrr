@@ -20,8 +20,9 @@ Figure 5 (forthcoming) will show the half-node corrected digital,
 which removes the even-phase central-atom term and is expected to
 restore O(1/n) convergence in both phases.
 
-Generates one figure (Chen §9.4 base case):
-    figures/digital_errors_atm.{pdf,png}  -- K = 100 (ATM)
+Generates two figures:
+    figures/digital_errors_itm.{pdf,png}  -- K = 95  (ITM)
+    figures/digital_errors_otm.{pdf,png}  -- K = 105 (OTM)
 """
 from pathlib import Path
 
@@ -34,9 +35,9 @@ from gcrr.digital import digital_strict_price
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Fixed parameters (Chen §9.4 base case) ---
-S, T, r, sigma = 100.0, 1.0, 0.05, 0.20
-N_VALUES = np.arange(25, 1001)
+# --- Fixed parameters ---
+S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
+N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 SCHEMES = [
     ("joshi_2009",  schemes.joshi_2009, 10),  # background
@@ -144,7 +145,8 @@ def main():
     out_dir = Path(__file__).parent.parent / "figures"
     out_dir.mkdir(exist_ok=True)
 
-    make_figure(K=100.0, moneyness_tag="ATM", out_dir=out_dir)
+    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
+    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
 
 
 if __name__ == "__main__":

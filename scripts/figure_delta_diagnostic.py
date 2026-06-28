@@ -17,17 +17,16 @@ Observations from this figure:
     - Joshi (2009): Delta = 0 for every odd n (its only domain).
     - GCRR-GC: Delta = 1 for even n, Delta = 0 for odd n. Parity-locked.
     
-    Observations at the Chen §9.4 base case (ATM, K=S=100):
-    - At ATM, the strike sits at the geometric center of the lattice for
-      every centered scheme, so Delta = +1 for even n and Delta = 0 for odd
-      n across CRR, Tian (mostly), Joshi, and GCRR-GC. CRR coincides with
-      the centered schemes here because the geometric-center condition
-      lambda = 1 reduces to standard CRR at K = S.
-    - The saw-tooth oscillation of Delta that motivates the figure at
-      off-center strikes (e.g., K = 105) does not appear at ATM. See
-      figures/delta_diagnostic_K105.pdf for the OTM version.
-    - Tian still shows brief excursions to Delta = +1 at j_0 transitions,
-      consistent with its step-discontinuity structure.
+    Observations from this figure:
+    - CRR: Delta drifts slowly in saw-tooth bands. Within each band, the
+      fractional part of log(K/S0) / (2 sigma sqrt(T/n)) drifts roughly
+      linearly with n; at the same n values where Tian's j_0 transitions,
+      CRR's drift wraps around. This is the geometric mechanism behind
+      both CRR's price oscillation and Tian's step-discontinuities.
+    - Tian (1999): Delta locks to 1 most of the time, with brief excursions
+      to -1 at j_0 transitions. Same n-pattern as CRR's wraparounds.
+    - Joshi (2009): Delta = 0 for every odd n (its only domain).
+    - GCRR-GC: Delta = 1 for even n, Delta = 0 for odd n. Parity-locked.
 
 The figure uses markers only (no connecting lines) because connecting
 alternating-parity data points produces spurious vertical sweeps.
@@ -42,9 +41,9 @@ from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
 
 
-# --- Parameters (Chen §9.4 base case) ---
-S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20
-N_VALUES = np.arange(25, 1001)
+# --- Parameters (Chen §9.4 primary non-ATM case) ---
+S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
+N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 # Plot in this order so overlapping schemes are visible: bottom to top.
 # CRR plotted first (background) since it spans the widest range;
