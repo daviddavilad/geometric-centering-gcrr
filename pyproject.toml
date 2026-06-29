@@ -5,6 +5,7 @@ description = "GCRR-GC binomial option pricing schemes (private research)"
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
+    "pandas>=3.0.3",
     "scipy>=1.11",
     "sympy>=1.14.0",
 ]
