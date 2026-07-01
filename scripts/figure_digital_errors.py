@@ -6,7 +6,7 @@ priced as e^{-rT} * Psi_{N,eta}(p_n^B).
 
 Section 9.3 of the GCRR-GC draft predicts that the strict digital
 exhibits an "even-phase central-atom discrepancy of order n^{-1/2}".
-The empirical pattern (verified in scripts/check_phase_gap is the
+The empirical pattern (verified in scripts/verify_phase_gap) is the
 pricing analogue; here for digitals) is even stronger:
 
   - Even-phase GCRR-GC error: O(1/sqrt(n)) with empirical coefficient

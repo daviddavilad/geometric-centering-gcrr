@@ -20,7 +20,7 @@ pricer:
   3. Subtract to get the empirical phase gap A_1 - A_0.
   4. Compare to the analytical prediction.
 
-Usage: python3 scripts/check_phase_gap.py
+Usage: uv run python scripts/verify_phase_gap.py
 """
 
 import numpy as np

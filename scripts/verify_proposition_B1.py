@@ -25,7 +25,7 @@ To remove the O(1/sqrt(n)) sub-leading bias we fit a three-term model
     residual = C/n + D/n^{1.5} + E/n^2
 and report the C coefficient (least squares).
 
-Usage: python3 scripts/check_proposition_B1.py
+Usage: uv run python scripts/verify_proposition_B1.py
 """
 
 import numpy as np
