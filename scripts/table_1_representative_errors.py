@@ -1,0 +1,188 @@
+"""Generate Table 1 (representative errors) for the GCRR-GC paper.
+
+Per Chen Section 9.5: "Table 1 should report representative absolute
+pricing errors and scaled errors at selected values of n."
+
+Produces two tables:
+    Table 1a: absolute errors   C_n - C_BS
+    Table 1b: scaled errors     n * (C_n - C_BS)
+
+Layout (both tables):
+    Rows: 8 WAND cases x 4 selected n values = 32 rows
+    Columns: CRR, GCRR-GC, Tian (1999), Joshi (2009)
+
+Selected n values: {200, 500, 1000, 5000}. n=200 shows moderate-n
+behavior (finite-n regime); n=5000 shows the asymptotic regime.
+
+Joshi handling: Joshi's construction forces odd n, so at each selected
+(even) n we report Joshi's price at the adjacent odd n_eff (n+1). This
+is footnoted in the output.
+
+Inputs:  data/wand_results.csv (from wand_robustness_data.py).
+Outputs:
+    tables/table_1a_absolute_errors.csv
+    tables/table_1a_absolute_errors.md
+    tables/table_1b_scaled_errors.csv
+    tables/table_1b_scaled_errors.md
+"""
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+
+
+SELECTED_N = [200, 500, 1000, 5000]
+SCHEMES_ORDER = ["crr", "gcrr_gc", "tian_1999", "joshi_2009"]
+SCHEME_DISPLAY = {
+    "crr":        "CRR",
+    "gcrr_gc":    "GCRR-GC",
+    "tian_1999":  "Tian (1999)",
+    "joshi_2009": "Joshi (2009)",
+}
+
+INPUT_CSV = Path(__file__).parent.parent / "data" / "wand_results.csv"
+OUTPUT_DIR = Path(__file__).parent.parent / "tables"
+
+
+def get_error_at_n(df: pd.DataFrame, case_id: int, scheme: str, target_n: int, metric: str) -> float | None:
+    """Look up the error for one (case, scheme, n) cell.
+
+    For Joshi (odd only), we search for the odd n_eff adjacent to target_n
+    (i.e., target_n + 1). For other schemes, we look up target_n directly.
+
+    Returns the metric value, or None if not found.
+    """
+    subset = df[(df["case_id"] == case_id) & (df["scheme"] == scheme)]
+
+    if scheme == "joshi_2009":
+        lookup_n = target_n + 1  # Joshi at adjacent odd n
+    else:
+        lookup_n = target_n
+
+    match = subset[subset["n_eff"] == lookup_n]
+    if match.empty:
+        return None
+    return float(match[metric].iloc[0])
+
+
+def build_table(df: pd.DataFrame, metric: str) -> list[dict]:
+    """Build one of the two tables. metric = 'error' or 'scaled_error'.
+
+    Returns a list of row dicts. Each row is one (case_id, target_n)
+    combination with columns for each scheme.
+    """
+    rows = []
+    case_ids = sorted(df["case_id"].unique())
+
+    for case_id in case_ids:
+        # Get the case parameters (any row for this case)
+        case_meta = df[df["case_id"] == case_id].iloc[0]
+        K, sigma, T = case_meta["K"], case_meta["sigma"], case_meta["T"]
+
+        for target_n in SELECTED_N:
+            row = {
+                "case_id": case_id,
+                "K": K,
+                "sigma": sigma,
+                "T": T,
+                "n": target_n,
+            }
+            for scheme in SCHEMES_ORDER:
+                row[scheme] = get_error_at_n(df, case_id, scheme, target_n, metric)
+            rows.append(row)
+
+    return rows
+
+
+def write_csv(rows: list[dict], path: Path):
+    """Write table as CSV for Word/Excel paste."""
+    table = pd.DataFrame(rows)
+    table.to_csv(path, index=False, float_format="%.6g")
+    print(f"Saved {path}")
+
+
+def write_markdown(rows: list[dict], path: Path, caption: str, metric_label: str):
+    """Write table as Markdown for human review."""
+    header = (
+        "| Case (K, σ, T)        |    n | "
+        + " | ".join(f"{SCHEME_DISPLAY[s]:>11s}" for s in SCHEMES_ORDER)
+        + " |\n"
+    )
+    header += (
+        "|:----------------------|-----:|"
+        + "|".join([":-----------:"] * len(SCHEMES_ORDER))
+        + "|\n"
+    )
+
+    body_lines = []
+    prev_case_id = None
+    for r in rows:
+        if r["case_id"] != prev_case_id:
+            # Row group header could go here; keeping single-row-per-line for CSV parity
+            prev_case_id = r["case_id"]
+
+        case_str = f"(K={r['K']:.0f}, σ={r['sigma']:.2f}, T={r['T']:.2f})"
+
+        cells = []
+        for scheme in SCHEMES_ORDER:
+            val = r[scheme]
+            if val is None:
+                cells.append("—")
+            else:
+                cells.append(f"{val:+.4e}")
+
+        body_lines.append(
+            f"| {case_str:21s} | {r['n']:>4d} | " + " | ".join(cells) + " |"
+        )
+
+    table_md = header + "\n".join(body_lines) + "\n"
+
+    footnote = (
+        "\n*Joshi (2009) reported at the adjacent odd n (n+1), since Joshi's "
+        "construction requires odd n.*\n"
+    )
+
+    with open(path, "w") as f:
+        f.write(f"**Table 1{metric_label}.** {caption}\n\n")
+        f.write(table_md)
+        f.write(footnote)
+    print(f"Saved {path}")
+
+
+def main():
+    df = pd.read_csv(INPUT_CSV)
+
+    OUTPUT_DIR.mkdir(exist_ok=True)
+
+    # Table 1a: absolute errors
+    rows_abs = build_table(df, metric="error")
+    write_csv(rows_abs, OUTPUT_DIR / "table_1a_absolute_errors.csv")
+    write_markdown(
+        rows_abs,
+        OUTPUT_DIR / "table_1a_absolute_errors.md",
+        caption=(
+            "Absolute pricing errors $C_n - C_{BS}$ at representative n across "
+            "the WAND panel ($S_0 = 40$, $r = 0.06$)."
+        ),
+        metric_label="a",
+    )
+
+    # Table 1b: scaled errors
+    rows_scaled = build_table(df, metric="scaled_error")
+    write_csv(rows_scaled, OUTPUT_DIR / "table_1b_scaled_errors.csv")
+    write_markdown(
+        rows_scaled,
+        OUTPUT_DIR / "table_1b_scaled_errors.md",
+        caption=(
+            "Scaled errors $n(C_n - C_{BS})$ at representative n across "
+            "the WAND panel ($S_0 = 40$, $r = 0.06$)."
+        ),
+        metric_label="b",
+    )
+
+    print(f"\nGenerated Table 1a ({len(rows_abs)} rows) "
+          f"and Table 1b ({len(rows_scaled)} rows).")
+
+
+if __name__ == "__main__":
+    main()
