@@ -60,22 +60,27 @@ def _build_n_grid() -> np.ndarray:
     """Log-spaced n grid covering both parities.
 
     Each anchor n yields two grid points (n, n+1) so every scheme has
-    both even-phase and odd-phase data. Density: step 50 at low n,
-    step 100 mid, step 200 high.
+    both even-phase and odd-phase data. Density: coarse at low n
+    (where WAND-standard selected values live), denser at moderate n,
+    sparse at high n.
 
-    Result: ~64 distinct n values from 200 to 5001. Joshi's odd-only
-    construction maps consecutive (n, n+1) pairs to the same odd n_eff,
-    so its row count after dedup is half the others'.
+    Range covers n = 50 to 5001, including Chen §9.4's selected values
+    {50, 100, 500, 1000, 5000} (WAND (2002) and Chung-Shih (2007)
+    benchmark points).
+
+    Joshi's odd-only construction maps consecutive (n, n+1) pairs to
+    the same odd n_eff, so its row count after dedup is half the others'.
     """
-    low = np.arange(200, 500, 50)        # 6 even anchors: 200, 250, ..., 450
-    mid = np.arange(500, 1000, 100)      # 5 even anchors: 500, 600, ..., 900
-    high = np.arange(1000, 5001, 200)    # 21 even anchors: 1000, 1200, ..., 5000
+    very_low = np.array([50, 100, 150])                 # 3 anchors: covers n=50, 100
+    low = np.arange(200, 500, 50)                       # 6 anchors: 200, 250, ..., 450
+    mid = np.arange(500, 1000, 100)                     # 5 anchors: 500, 600, ..., 900
+    high = np.arange(1000, 5001, 200)                   # 21 anchors: 1000, 1200, ..., 5000
 
-    anchors = np.concatenate([low, mid, high])  # 32 even anchors
+    anchors = np.concatenate([very_low, low, mid, high])  # 35 even anchors
 
     # For each anchor, include both n and n+1 to cover even and odd phases.
     grid = np.concatenate([anchors, anchors + 1])
-    grid.sort()  # Optional: keeps output rows in n_req order
+    grid.sort()
     return grid
 
 

@@ -11,8 +11,9 @@ Layout (both tables):
     Rows: 8 WAND cases x 4 selected n values = 32 rows
     Columns: CRR, GCRR-GC, Tian (1999), Joshi (2009)
 
-Selected n values: {200, 500, 1000, 5000}. n=200 shows moderate-n
-behavior (finite-n regime); n=5000 shows the asymptotic regime.
+Selected n values: {50, 100, 500, 1000, 5000}, matching the benchmark
+n values used in WAND (2002) and Chung-Shih (2007). Small n (50, 100)
+shows finite-n behavior; large n (5000) shows the asymptotic regime.
 
 Joshi handling: Joshi's construction forces odd n, so at each selected
 (even) n we report Joshi's price at the adjacent odd n_eff (n+1). This
@@ -31,7 +32,7 @@ import numpy as np
 import pandas as pd
 
 
-SELECTED_N = [200, 500, 1000, 5000]
+SELECTED_N = [50, 100, 500, 1000, 5000]  # WAND (2002) & Chung-Shih (2007) benchmark
 SCHEMES_ORDER = ["crr", "gcrr_gc", "tian_1999", "joshi_2009"]
 SCHEME_DISPLAY = {
     "crr":        "CRR",
@@ -101,6 +102,13 @@ def write_csv(rows: list[dict], path: Path):
     print(f"Saved {path}")
 
 
+def write_xlsx(rows: list[dict], path: Path):
+    """Write table as XLSX (Chen §9.5 workflow: Word/Excel-native format)."""
+    table = pd.DataFrame(rows)
+    table.to_excel(path, index=False, float_format="%.6g")
+    print(f"Saved {path}")
+
+
 def write_markdown(rows: list[dict], path: Path, caption: str, metric_label: str):
     """Write table as Markdown for human review."""
     header = (
@@ -157,6 +165,7 @@ def main():
     # Table 1a: absolute errors
     rows_abs = build_table(df, metric="error")
     write_csv(rows_abs, OUTPUT_DIR / "table_1a_absolute_errors.csv")
+    write_xlsx(rows_abs, OUTPUT_DIR / "table_1a_absolute_errors.xlsx")
     write_markdown(
         rows_abs,
         OUTPUT_DIR / "table_1a_absolute_errors.md",
@@ -170,6 +179,7 @@ def main():
     # Table 1b: scaled errors
     rows_scaled = build_table(df, metric="scaled_error")
     write_csv(rows_scaled, OUTPUT_DIR / "table_1b_scaled_errors.csv")
+    write_xlsx(rows_scaled, OUTPUT_DIR / "table_1b_scaled_errors.xlsx")
     write_markdown(
         rows_scaled,
         OUTPUT_DIR / "table_1b_scaled_errors.md",

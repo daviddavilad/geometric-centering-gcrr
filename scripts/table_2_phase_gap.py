@@ -80,6 +80,13 @@ def write_csv(rows: list[dict], path: Path):
     print(f"Saved {path}")
 
 
+def write_xlsx(rows: list[dict], path: Path):
+    """Write table as XLSX (Chen §9.5 workflow: Word/Excel-native format)."""
+    table = pd.DataFrame(rows)
+    table.to_excel(path, index=False, float_format="%.6g")
+    print(f"Saved {path}")
+
+
 def write_markdown(rows: list[dict], path: Path):
     """Write table as Markdown for human review."""
     header = (
@@ -121,6 +128,7 @@ def main():
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     write_csv(rows, OUTPUT_DIR / "table_2_phase_gap.csv")
+    write_xlsx(rows, OUTPUT_DIR / "table_2_phase_gap.xlsx")
     write_markdown(rows, OUTPUT_DIR / "table_2_phase_gap.md")
 
     print(f"\nGenerated Table 2 with {len(rows)} cases.")
