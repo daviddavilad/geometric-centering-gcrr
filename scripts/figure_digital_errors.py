@@ -6,23 +6,24 @@ priced as e^{-rT} * Psi_{N,eta}(p_n^B).
 
 Section 9.3 of the GCRR-GC draft predicts that the strict digital
 exhibits an "even-phase central-atom discrepancy of order n^{-1/2}".
-The empirical pattern (verified in scripts/verify_phase_gap) is the
-pricing analogue; here for digitals) is even stronger:
+The empirical pattern (verified in scripts/verify_phase_gap.py) is:
 
   - Even-phase GCRR-GC error: O(1/sqrt(n)) with empirical coefficient
     ~-0.378 at OTM (K=105). This is the central-atom discrepancy.
   - Odd-phase GCRR-GC error: O(1/n), about three orders of magnitude
     smaller than even-phase at n=12800.
   - Joshi (odd n only): tracks GCRR-GC odd phase, also O(1/n).
-  - CRR: oscillates pseudo-randomly within each phase.
 
-Figure 5 (forthcoming) will show the half-node corrected digital,
-which removes the even-phase central-atom term and is expected to
-restore O(1/n) convergence in both phases.
+Figure 5 (figure_digital_corrected_errors.py) will show the half-node
+corrected digital, which removes the even-phase central-atom term and
+restores O(1/n) convergence in both phases.
 
 Generates two figures:
-    figures/digital_errors_itm.{pdf,png}  -- K = 95  (ITM)
-    figures/digital_errors_otm.{pdf,png}  -- K = 105 (OTM)
+    figures_paper/digital_errors_itm.{pdf,png}  -- K = 95  (ITM)
+    figures_paper/digital_errors_otm.{pdf,png}  -- K = 105 (OTM)
+
+Set WRITE_COLOR = True to also generate legacy color versions in
+figures/ (used by talks/slides).
 """
 from pathlib import Path
 
@@ -32,28 +33,30 @@ import numpy as np
 from gcrr import schemes
 from gcrr.black_scholes import bs_digital_strict
 from gcrr.digital import digital_strict_price
-from gcrr.plotting import SCHEME_COLORS, SCHEME_LABELS, set_style
+from gcrr.plotting import (
+    SCHEME_COLORS,
+    SCHEME_LABELS,
+    set_style,
+    set_style_paper,
+    plot_paper_series,
+)
 
+
+# --- Toggle: also generate legacy color versions? ---
+WRITE_COLOR = False
 
 # --- Fixed parameters ---
 S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
 N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
 
 SCHEMES = [
-    ("joshi_2009",  schemes.joshi_2009, 10),  # background
-    ("gcrr_gc",     schemes.gcrr_gc,     3),  # foreground
+    ("joshi_2009", schemes.joshi_2009),
+    ("gcrr_gc",    schemes.gcrr_gc),
 ]
-# Format: (key, fn, marker_size)
 
 
 def compute_phase_separated_digital_errors(K, scheme_fn, n_values):
-    """Compute digital errors at each n; partition by *effective* parity.
-
-    Mirrors the bookkeeping in errors.phase_separated_errors: Joshi forces
-    n odd internally, so we use params.n (effective n) for the parity
-    partition, not the requested n. Duplicates from Joshi's even-n bumping
-    are de-duplicated by keeping the first occurrence.
-    """
+    """Compute digital errors at each n; partition by *effective* parity."""
     bs_ref = bs_digital_strict(S, K, T, r, sigma)
 
     n_eff_list, err_list = [], []
@@ -83,34 +86,75 @@ def compute_phase_separated_digital_errors(K, scheme_fn, n_values):
     }
 
 
-def make_figure(K, moneyness_tag, out_dir):
-    """Two-panel phase-separated digital-error figure at a given strike."""
-    results = {
+def _compute_results(K):
+    """Compute phase-separated digital errors for each scheme."""
+    return {
         key: compute_phase_separated_digital_errors(K, fn, N_VALUES)
-        for key, fn, _ in SCHEMES
+        for key, fn in SCHEMES
     }
 
-    # Side-by-side panels with INDEPENDENT y-axes -- the phase asymmetry
-    # (~3 orders of magnitude at large n) makes shared y-axes unreadable.
+
+def make_figure_paper(K, moneyness_tag, results, out_dir):
+    """Paper-style monochrome figure: two panels with independent y-axes."""
+    set_style_paper()
+
+    fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(9, 4))
+
+    for key, _ in SCHEMES:
+        out = results[key]
+        # Even panel: GCRR-GC only (Joshi is odd-only)
+        if len(out["n_even"]) > 0:
+            plot_paper_series(ax_even, out["n_even"], out["err_even"], key, label="_nolegend_")
+        # Odd panel: both schemes
+        if len(out["n_odd"]) > 0:
+            plot_paper_series(ax_odd, out["n_odd"], out["err_odd"], key)
+
+    for ax in (ax_even, ax_odd):
+        ax.axhline(0, color="black", linewidth=0.5, alpha=0.6, zorder=0)
+        ax.set_xlabel(r"$n$ (periods)")
+
+    ax_even.set_title(r"Even $n$")
+    ax_odd.set_title(r"Odd $n$")
+    ax_even.set_ylabel(r"$D^>_{N,\eta} - D_{BS}$")
+
+    ax_odd.legend(loc="best", frameon=True)
+
+    fig.suptitle(
+        f"Strict digital errors ({moneyness_tag}): "
+        f"$S={S:.0f}$, $K={K:.0f}$, $T={T}$, $r={r}$, $\\sigma={sigma}$",
+        fontsize=11,
+    )
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+
+    stem = f"digital_errors_{moneyness_tag.lower()}"
+    out_pdf = out_dir / f"{stem}.pdf"
+    out_png = out_dir / f"{stem}.png"
+    fig.savefig(out_pdf)
+    fig.savefig(out_png, dpi=150)
+    print(f"Saved {out_pdf} (+ .png)")
+    plt.close(fig)
+
+
+def make_figure_color(K, moneyness_tag, results, out_dir):
+    """Legacy color figure: preserved for talks/slides."""
+    set_style()
+
     fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(12, 5))
 
-    for key, _, size in SCHEMES:
+    sizes = {"joshi_2009": 10, "gcrr_gc": 3}
+    for key, _ in SCHEMES:
         out = results[key]
-        color = SCHEME_COLORS[key]
-        label = SCHEME_LABELS[key]
-        # Even panel: GCRR-GC only (Joshi is odd-only)
         if len(out["n_even"]) > 0:
             ax_even.scatter(
                 out["n_even"], out["err_even"],
-                color=color, marker="o", s=size,
+                color=SCHEME_COLORS[key], marker="o", s=sizes[key],
                 alpha=0.85, edgecolors="none",
             )
-        # Odd panel: both schemes
         if len(out["n_odd"]) > 0:
             ax_odd.scatter(
                 out["n_odd"], out["err_odd"],
-                color=color, marker="o", s=size,
-                alpha=0.85, label=label, edgecolors="none",
+                color=SCHEME_COLORS[key], marker="o", s=sizes[key],
+                alpha=0.85, label=SCHEME_LABELS[key], edgecolors="none",
             )
 
     for ax in (ax_even, ax_odd):
@@ -121,7 +165,6 @@ def make_figure(K, moneyness_tag, out_dir):
     ax_odd.set_title(r"Odd $n$")
     ax_even.set_ylabel(r"$D^>_{N,\eta} - D_{BS}$")
 
-    # Legend on the odd panel (where both schemes appear)
     ax_odd.legend(loc="best", framealpha=0.9)
 
     fig.suptitle(
@@ -141,12 +184,23 @@ def make_figure(K, moneyness_tag, out_dir):
 
 
 def main():
-    set_style()
-    out_dir = Path(__file__).parent.parent / "figures"
-    out_dir.mkdir(exist_ok=True)
+    project_root = Path(__file__).parent.parent
 
-    make_figure(K=95.0,  moneyness_tag="ITM", out_dir=out_dir)
-    make_figure(K=105.0, moneyness_tag="OTM", out_dir=out_dir)
+    # Paper (monochrome) output
+    paper_dir = project_root / "figures_paper"
+    paper_dir.mkdir(exist_ok=True)
+
+    for K, tag in [(95.0, "ITM"), (105.0, "OTM")]:
+        results = _compute_results(K)
+        make_figure_paper(K, tag, results, paper_dir)
+
+    # Optional: legacy color output
+    if WRITE_COLOR:
+        color_dir = project_root / "figures"
+        color_dir.mkdir(exist_ok=True)
+        for K, tag in [(95.0, "ITM"), (105.0, "OTM")]:
+            results = _compute_results(K)
+            make_figure_color(K, tag, results, color_dir)
 
 
 if __name__ == "__main__":
