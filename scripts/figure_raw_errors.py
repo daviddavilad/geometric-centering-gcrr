@@ -83,12 +83,8 @@ def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path
     ax.set_ylabel(r"$C_n - C^{\mathrm{BS}}$")
     ax.legend(loc="best")
 
-    fig.suptitle(
-        f"Raw call-price errors ({moneyness_tag}): "
-        f"$S={S:.0f}$, $K={K:.0f}$, $T={T}$, $r={r}$, $\\sigma={sigma}$",
-        fontsize=11,
-    )
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    # fig.suptitle removed: parameters live in the Word caption
+    fig.tight_layout(rect=(0, 0, 1, 1))
 
     stem = f"raw_errors_{moneyness_tag.lower()}"
     out_pdf = out_dir / f"{stem}.pdf"

@@ -85,12 +85,8 @@ def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path
         frameon=True,
     )
 
-    fig.suptitle(
-        f"Phase-separated scaled error ({moneyness_tag}): "
-        f"$S={S:.0f}$, $K={K:.0f}$, $T={T}$, $r={r}$, $\\sigma={sigma}$",
-        fontsize=11,
-    )
-    fig.tight_layout(rect=(0, 0.05, 1, 0.97))
+    # fig.suptitle removed: parameters live in the Word caption
+    fig.tight_layout(rect=(0, 0.05, 1, 1))
 
     stem = f"scaled_errors_{moneyness_tag.lower()}"
     out_pdf = out_dir / f"{stem}.pdf"

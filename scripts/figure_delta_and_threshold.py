@@ -122,12 +122,8 @@ def make_figure_paper(results: dict, out_dir: Path):
         frameon=True,
     )
 
-    fig.suptitle(
-        f"Strike-location diagnostics  "
-        f"($S={S:.0f}$, $K={K:.0f}$, $T={T}$, $\\sigma={sigma}$)",
-        fontsize=11,
-    )
-    fig.tight_layout(rect=(0, 0, 0.85, 0.97))
+    # fig.suptitle removed: parameters live in the Word caption
+    fig.tight_layout(rect=(0, 0, 0.85, 1))
 
     out_pdf = out_dir / "delta_and_threshold.pdf"
     out_png = out_dir / "delta_and_threshold.png"
