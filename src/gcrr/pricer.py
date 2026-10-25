@@ -8,8 +8,8 @@ strike-location bookkeeping that the GCRR family needs.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from scipy.stats import binom
 import numpy as np
-
 
 @dataclass(frozen=True)
 class TreeParameters:
@@ -48,16 +48,7 @@ class TreeParameters:
         if self.n <= 0:
             raise ValueError(f"Require n > 0, got n={self.n}")
 
-
-def binomial_price(
-    S: float,
-    K: float,
-    T: float,
-    r: float,
-    params: TreeParameters,
-    option_type: str = "call",
-    exercise: str = "european",
-) -> float:
+def binomial_price(S: float, K: float, T: float, r: float, params: TreeParameters, option_type: str = "call", exercise: str = "european") -> float:
     """Price an option by backward induction on the given tree.
 
     Vectorized over the j-index at each time step. O(n^2) time, O(n) space.
@@ -99,3 +90,32 @@ def binomial_price(
             V = np.maximum(V, intrinsic)
 
     return float(V[0])
+
+def two_tail_call_price(S, K, T, r, params: TreeParameters, m: int | None = None) -> float:
+    """European call via the exact two-numeraire tail representation
+    (Proposition 3.1):  C = S Psi(p^S) - K e^{-rT} Psi(p^B),
+    Psi(p) = P(Bin(n, p) >= m),  p^S = p^B u / R.
+
+    m is the strict exercise threshold m_n = min{j : S u^j d^(n-j) > K}
+    (eq. 1). If None, it is computed from the tree geometry. For GCRR-GC,
+    m = N + 1 in both phases (Proposition 2.1). O(n) via binom.sf, versus
+    O(n^2) for backward induction; the two agree to 1e-10
+    (tests/test_pricer.py).
+    """
+    from .diagnostics import strike_location
+
+    n = params.n
+
+    # Bond- and stock-numeraire probabilities
+    pB = params.p
+    pS = pB * params.u / params.R
+
+    # Strict exercise threshold
+    if m is None:
+        m = strike_location(S, K, params).J_strict
+
+    # Binomial upper tails P(Bin(n, p) >= m); sf(k) = P(X > k)
+    tail_S = binom.sf(m - 1, n, pS)
+    tail_B = binom.sf(m - 1, n, pB)
+
+    return float(S * tail_S - K * np.exp(-r * T) * tail_B)

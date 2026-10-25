@@ -24,7 +24,6 @@ import numpy as np
 from .black_scholes import bs_call, bs_put
 from .pricer import binomial_price
 
-
 @dataclass(frozen=True)
 class PhaseSeparatedErrors:
     """Errors of a scheme across a sweep of n values, separated by parity.
@@ -42,17 +41,7 @@ class PhaseSeparatedErrors:
     scaled_err_even: np.ndarray
     scaled_err_odd: np.ndarray
 
-
-def phase_separated_errors(
-    S: float,
-    K: float,
-    T: float,
-    r: float,
-    sigma: float,
-    scheme,
-    n_values: np.ndarray,
-    option_type: str = "call",
-) -> PhaseSeparatedErrors:
+def phase_separated_errors(S: float, K: float, T: float, r: float, sigma: float, scheme, n_values: np.ndarray, option_type: str = "call") -> PhaseSeparatedErrors:
     """Compute pricing errors across a sweep of n, separated by parity.
 
     Uses the *effective* n actually consumed by the pricer for both the
@@ -104,3 +93,21 @@ def phase_separated_errors(
         scaled_err_even=n_eff[even_mask] * errs[even_mask],
         scaled_err_odd=n_eff[odd_mask] * errs[odd_mask],
     )
+
+def fit_leading_constant(n_values, values) -> float:
+    """Least-squares fit of y_n = A + B*n^(-1/2) + C/n.
+
+    Returns the fitted leading asymptotic constant A.
+    """
+    n = np.asarray(n_values, dtype=float)
+    y = np.asarray(values, dtype=float)
+
+    X = np.column_stack([
+        np.ones_like(n),
+        n**(-0.5),
+        1.0 / n,
+    ])
+
+    coef, *_ = np.linalg.lstsq(X, y, rcond=None)
+
+    return float(coef[0])
