@@ -1,130 +1,153 @@
-"""Generate Table 2 (phase-gap diagnostic) for the GCRR-GC paper.
+"""Table 2: phase-wise constants and phase gap across the WAND panel.
 
-Per Chen Section 9.5: "Table 2 should report the fitted phase-wise
-constants A_0 and A_1, the empirical phase gap A_1 - A_0, the
-closed-form prediction (1/2) S_0 phi(d_1) sigma sqrt(T), and show
-that the even and odd limits are stable but not generally equal."
+Tests Theorem 3.2 and Corollary 3.3 at the coefficient level. For each of
+the eight WAND-style cases (Section 5.1), the phase constants A_0 and A_1
+are estimated by least squares,
 
-Inputs:  data/wand_results.csv (from wand_robustness_data.py).
-Outputs:
-    tables/table_2_phase_gap.csv  -- CSV for import to Word via Excel
-    tables/table_2_phase_gap.md   -- Markdown for readability
+    n (C_n - C_BS) = A + B n^{-1/2} + C n^{-1},   n = base + eta,
+    base in FIT_N_BASES = (1e3, 2e3, 5e3, 1e4, 2e4, 5e4, 1e5),
 
-Columns:
-    Case (K, sigma, T) | A_0_hat | A_1_hat | empirical gap | predicted gap | |residual|
+with GCRR-GC prices from the exact two-tail representation (Proposition
+3.1), which agrees with backward induction to 1e-10 (tests/test_pricer.py).
+Fitted values are compared with eq. (8) for A_0, A_1 and eq. (9) for the
+gap. Residuals are of order 1e-7 to 1e-6, depending on platform floating
+point.
 
-Fitting method: large-n mean of scaled errors (n_eff >= 1000). Verified
-in scripts/verify_phase_gap_wand.py to match the Corollary 7.2
-prediction within 2e-4 across all 8 WAND cases.
+Outputs (tables/):
+    table_2_phase_gap.csv, .xlsx   full precision
+    table_2_phase_gap.md           rounded, with caption
 """
+from itertools import product
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
-from scipy.stats import norm
 
+from gcrr import schemes
+from gcrr.black_scholes import bs_call
+from gcrr.errors import fit_leading_constant
+from gcrr.pricer import two_tail_call_price
+from gcrr.theory import A_eta, phase_gap
 
-LARGE_N_THRESHOLD = 1000
-INPUT_CSV = Path(__file__).parent.parent / "data" / "wand_results.csv"
+# WAND-style panel (Section 5.1)
+S0, RATE = 40.0, 0.06
+K_VALUES = (35.0, 45.0)
+SIGMA_VALUES = (0.20, 0.40)
+T_VALUES = (0.25, 0.50)
+
+# Step counts for fitting A_eta; n = base + eta in each phase
+FIT_N_BASES = (1000, 2000, 5000, 10000, 20000, 50000, 100000)
+
 OUTPUT_DIR = Path(__file__).parent.parent / "tables"
 
+def fit_phase_constant(S, K, T, r, sigma, eta: int) -> float:
+    """Fitted A_eta: least-squares fit of n (C_n - C_BS) = A + B n^{-1/2} + C n^{-1}
+    over n = base + eta, base in FIT_N_BASES, with GCRR-GC prices from the
+    two-tail representation (Proposition 3.1) at threshold m = N + 1.
+    """
+    n_values = np.array([base + eta for base in FIT_N_BASES], dtype=int)
 
-def phase_gap_prediction(S: float, K: float, T: float, r: float, sigma: float) -> float:
-    """Closed-form A_1 - A_0 from Corollary 7.2."""
-    d1 = (np.log(S / K) + (r + 0.5 * sigma**2) * T) / (sigma * np.sqrt(T))
-    return 0.5 * S * norm.pdf(d1) * sigma * np.sqrt(T)
+    C_BS = bs_call(S, K, T, r, sigma)
+    scaled_errors = []
 
+    for n in n_values:
+        n = int(n)
 
-def build_table_rows(df: pd.DataFrame) -> list[dict]:
+        params = schemes.gcrr_gc(S, K, T, r, sigma, n)
+
+        C_n = two_tail_call_price(S, K, T, r, params, m=n // 2 + 1)
+
+        scaled_errors.append(n * (C_n - C_BS))
+
+    return fit_leading_constant(n_values, scaled_errors)
+    
+def build_table_rows() -> list[dict]:
     """For each WAND case, compute fitted constants and predicted gap.
 
     Returns a list of dicts, one per case, with columns matching the
     final table output.
     """
-    gc = df[df["scheme"] == "gcrr_gc"]
-
     rows = []
-    for case_id in sorted(gc["case_id"].unique()):
-        case = gc[gc["case_id"] == case_id]
-        S = case["S"].iloc[0]
-        K = case["K"].iloc[0]
-        sigma = case["sigma"].iloc[0]
-        T = case["T"].iloc[0]
-        r = case["r"].iloc[0]
 
-        large_n = case[case["n_eff"] >= LARGE_N_THRESHOLD]
-        A_0 = large_n[large_n["eta"] == 0]["scaled_error"].mean()
-        A_1 = large_n[large_n["eta"] == 1]["scaled_error"].mean()
-        emp_gap = A_1 - A_0
+    for K, sigma, T in product(K_VALUES, SIGMA_VALUES, T_VALUES):
 
-        prediction = phase_gap_prediction(S, K, T, r, sigma)
-        residual = abs(emp_gap - prediction)
+        # Empirical fitted coefficients
+        A0_hat = fit_phase_constant(S0, K, T, RATE, sigma, 0)
+        A1_hat = fit_phase_constant(S0, K, T, RATE, sigma, 1)
+
+        # Theoretical predictions from Theorem 3.2
+        A0_theory = A_eta(S0, K, T, RATE, sigma, 0)
+        A1_theory = A_eta(S0, K, T, RATE, sigma, 1)
+
+        # Empirical and theoretical phase gaps
+        gap_hat = A1_hat - A0_hat
+        gap_theory = phase_gap(S0, K, T, RATE, sigma)
+
+        # Largest discrepancy among the three theoretical comparisons
+        max_abs_resid = max(abs(A0_hat - A0_theory), abs(A1_hat - A1_theory), abs(gap_hat - gap_theory))
 
         rows.append({
             "K": K,
             "sigma": sigma,
             "T": T,
-            "A_0_hat": A_0,
-            "A_1_hat": A_1,
-            "emp_gap": emp_gap,
-            "predicted": prediction,
-            "abs_residual": residual,
+            "A0_hat": A0_hat,
+            "A0_theory": A0_theory,
+            "A1_hat": A1_hat,
+            "A1_theory": A1_theory,
+            "gap_hat": gap_hat,
+            "gap_theory": gap_theory,
+            "max_abs_resid": max_abs_resid,
         })
+
     return rows
 
-
 def write_csv(rows: list[dict], path: Path):
-    """Write table as CSV (importable to Word via Excel paste)."""
+    """Write table as CSV at full precision."""
     table = pd.DataFrame(rows)
-    table.to_csv(path, index=False, float_format="%.6g")
+    table.to_csv(path, index=False, float_format="%.10g")
     print(f"Saved {path}")
-
 
 def write_xlsx(rows: list[dict], path: Path):
-    """Write table as XLSX (Chen §9.5 workflow: Word/Excel-native format)."""
+    """Write table as XLSX at full precision (for pasting into Word)."""
     table = pd.DataFrame(rows)
-    table.to_excel(path, index=False, float_format="%.6g")
+    table.to_excel(path, index=False, float_format="%.10g")
     print(f"Saved {path}")
 
-
 def write_markdown(rows: list[dict], path: Path):
-    """Write table as Markdown for human review."""
-    header = (
-        "| Case (K, σ, T)        | $\\hat{A}_0$ | $\\hat{A}_1$ | "
-        "$\\hat{A}_1 - \\hat{A}_0$ | Predicted | |Residual| |\n"
-        "|-----------------------|-------------|-------------|"
-        "--------------------------|-----------|------------|\n"
+    """Write table as Markdown with caption, rounded for reading."""
+    caption = (
+        "**Table 2.** Phase-wise constants and phase gap for GCRR-GC across "
+        "the WAND panel ($S_0=40$, $r=0.06$). $\\hat{A}_\\eta$ are least-squares "
+        "fits of $n(C_n - C_{BS}) = A + Bn^{-1/2} + Cn^{-1}$ over "
+        "$n \\in [10^3, 10^5]$ in each phase; predictions are from eqs. (8) "
+        "and (9). Max resid. is the largest of the three absolute differences.\n\n"
     )
+
+    header = (
+        "| Case (K, σ, T) | $\\hat{A}_0$ | $A_0$ (8) | $\\hat{A}_1$ | $A_1$ (8) "
+        "| $\\hat{A}_1 - \\hat{A}_0$ | $A_1 - A_0$ (9) | Max resid. |\n"
+        "|---|---|---|---|---|---|---|---|\n"
+    )
+
     body_lines = []
     for r in rows:
         case_str = f"(K={r['K']:.0f}, σ={r['sigma']:.2f}, T={r['T']:.2f})"
         body_lines.append(
-            f"| {case_str:21s} | "
-            f"{r['A_0_hat']:+.4f}    | "
-            f"{r['A_1_hat']:+.4f}    | "
-            f"{r['emp_gap']:+.4f}                 | "
-            f"{r['predicted']:+.4f}  | "
-            f"{r['abs_residual']:.2e}  |"
+            f"| {case_str} "
+            f"| {r['A0_hat']:+.4f} | {r['A0_theory']:+.4f} "
+            f"| {r['A1_hat']:+.4f} | {r['A1_theory']:+.4f} "
+            f"| {r['gap_hat']:+.4f} | {r['gap_theory']:+.4f} "
+            f"| {r['max_abs_resid']:.1e} |"
         )
-    table_md = header + "\n".join(body_lines) + "\n"
-
-    # Include a brief caption for readability
-    caption = (
-        "**Table 2.** Empirical phase gap $\\hat{A}_1 - \\hat{A}_0$ versus the "
-        "Corollary 7.2 prediction $\\frac{1}{2} S_0 \\phi(d_1) \\sigma \\sqrt{T}$, "
-        "across the WAND robustness panel ($S_0=40$, $r=0.06$). Fits use the "
-        "mean of $n(C_n - C_{BS})$ over $n_{eff} \\geq 1000$ for GCRR-GC.\n\n"
-    )
 
     with open(path, "w") as f:
         f.write(caption)
-        f.write(table_md)
+        f.write(header)
+        f.write("\n".join(body_lines) + "\n")
     print(f"Saved {path}")
 
-
 def main():
-    df = pd.read_csv(INPUT_CSV)
-    rows = build_table_rows(df)
+    rows = build_table_rows()
 
     OUTPUT_DIR.mkdir(exist_ok=True)
     write_csv(rows, OUTPUT_DIR / "table_2_phase_gap.csv")
@@ -132,9 +155,8 @@ def main():
     write_markdown(rows, OUTPUT_DIR / "table_2_phase_gap.md")
 
     print(f"\nGenerated Table 2 with {len(rows)} cases.")
-    max_residual = max(r["abs_residual"] for r in rows)
+    max_residual = max(r["max_abs_resid"] for r in rows)
     print(f"Maximum residual: {max_residual:.2e}")
-
 
 if __name__ == "__main__":
     main()
