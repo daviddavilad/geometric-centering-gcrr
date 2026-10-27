@@ -41,7 +41,7 @@ def test_two_tail_matches_backward_induction(scheme, K, n):
         f"difference={abs(two_tail - backward)}"
     )
 
-@pytest.mark.parametrize("K", [95.0, 105.0])
+@pytest.mark.parametrize("K", [95.0, 100.0, 105.0])  # K=100: ATM, where GCRR-GC = CRR (lambda = 1)
 @pytest.mark.parametrize("eta", [0, 1])
 def test_fitted_A_eta_matches_theorem(K, eta):
     S = 100.0

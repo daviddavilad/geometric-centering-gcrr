@@ -25,3 +25,6 @@ dist/
 .DS_Store
 .Rhistory
 
+
+# Legacy color figures (regenerate with WRITE_COLOR = True)
+figures/
