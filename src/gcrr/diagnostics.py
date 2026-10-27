@@ -1,35 +1,19 @@
-"""Strike-location diagnostics for binomial trees.
+"""Strike-location diagnostics for binomial trees (Section 2.1).
 
-Pure geometric quantities characterizing where the strike sits in the
-terminal log-lattice. Depend only on (S, K, n, u, d) -- not on p, r, sigma.
+Pure geometric quantities describing where the strike sits in the terminal
+log-lattice. They depend only on (S, K, n, u, d), not on p, r, or sigma.
 
-Definitions (GCRR-GC draft Section 1):
-    gamma_n(X)  = continuous strike index, the real-valued j such that
-                  S * u^j * d^(n-j) = K. Equivalently,
-                  gamma_n = (log(K/S) - n*log(d)) / log(u/d).
+    gamma_n  continuous terminal index of the strike, the real j with
+             S u^j d^(n-j) = K:  gamma_n = (log(K/S) - n log d) / log(u/d).
+    J_n      weak upper index ceil(gamma_n): smallest j with S u^j d^(n-j) >= K.
+    m_n      strict exercise threshold, eq. (1): smallest j with S u^j d^(n-j) > K.
+             Equals J_n unless the strike is exactly on a node, where m_n = J_n + 1.
+    theta_n  J_n - gamma_n in [0, 1): fractional distance to the node above.
+    Delta_n  1 - 2 theta_n in (-1, 1]: Delta = 1 on a node, 0 at the
+             geometric midpoint of two adjacent nodes.
 
-    J_n(X)      = weak upper neighboring index = ceil(gamma_n).
-                  The smallest integer j with S * u^j * d^(n-j) >= K.
-
-    J_n^+(X)    = strict upper neighboring index. The smallest integer j
-                  with S * u^j * d^(n-j) > K. Differs from J_n only when
-                  the strike sits exactly on a terminal node, in which
-                  case J_n^+ = J_n + 1.
-
-    theta_n(X)  = J_n - gamma_n in [0, 1). Fractional log-distance from
-                  the strike to the next node above, normalized by the
-                  lattice spacing.
-
-    Delta_n(X)  = 1 - 2*theta_n in (-1, 1]. Centered version of theta.
-                  Delta = 0 <=> strike at geometric midpoint of two nodes;
-                  Delta = 1 <=> strike exactly on a node (theta = 0);
-                  Delta -> -1 <=> strike just above a node (theta -> 1).
-
-For the GCRR-GC construction:
-    even n (eta=0): gamma_n = n/2 exactly, theta_n = 0, Delta_n = 1
-    odd n  (eta=1): gamma_n = n/2,         theta_n = 1/2, Delta_n = 0
-This is the parity-free property: |Delta_n| stays at extreme values for
-both parities, instead of oscillating pseudo-randomly as in CRR.
+For GCRR-GC (Proposition 2.1), gamma_n = n/2 in both phases, so Delta_n = 1
+for even n, Delta_n = 0 for odd n, and m_n = N + 1 for every n.
 """
 from __future__ import annotations
 
@@ -45,8 +29,8 @@ from .pricer import TreeParameters
 class StrikeLocation:
     """Strike-location coordinates for one tree."""
     gamma: float   # continuous strike index
-    J: int         # weak upper neighboring index = ceil(gamma)
-    J_strict: int  # strict upper neighboring index (S * u^j * d^(n-j) > K)
+    J: int         # weak upper index ceil(gamma_n)
+    m: int         # strict exercise threshold m_n, eq. (1)
     theta: float   # J - gamma, in [0, 1)
     Delta: float   # 1 - 2*theta, in (-1, 1]
 
@@ -104,12 +88,12 @@ def strike_location(S: float, K: float, params: TreeParameters) -> StrikeLocatio
     # at j = gamma satisfies S * u^j * d^(n-j) = K, not > K, so the
     # strict threshold steps up to gamma + 1.
     if gamma == math.floor(gamma):  # gamma is integer => strike on node
-        J_strict = int(gamma) + 1
+        m = int(gamma) + 1
     else:
-        J_strict = J
+        m = J
 
     return StrikeLocation(
-        gamma=gamma, J=J, J_strict=J_strict, theta=theta, Delta=Delta
+        gamma=gamma, J=J, m=m, theta=theta, Delta=Delta
     )
 
 
@@ -131,7 +115,7 @@ def strike_location_sweep(
         n_values: 1D array of n's at which to evaluate.
 
     Returns:
-        Dictionary with arrays 'gamma', 'J', 'theta', 'Delta', each
+        Dictionary with arrays 'gamma', 'J', 'm', 'theta', 'Delta', each
         the same length as n_values.
 
     Notes:
@@ -142,7 +126,7 @@ def strike_location_sweep(
     """
     gammas = np.empty(len(n_values), dtype=float)
     Js = np.empty(len(n_values), dtype=int)
-    J_stricts = np.empty(len(n_values), dtype=int)
+    ms = np.empty(len(n_values), dtype=int)
     thetas = np.empty(len(n_values), dtype=float)
     Deltas = np.empty(len(n_values), dtype=float)
 
@@ -151,8 +135,8 @@ def strike_location_sweep(
         loc = strike_location(S, K, params)
         gammas[i] = loc.gamma
         Js[i] = loc.J
-        J_stricts[i] = loc.J_strict
+        ms[i] = loc.m
         thetas[i] = loc.theta
         Deltas[i] = loc.Delta
 
-    return {"gamma": gammas, "J": Js, "J_strict": J_stricts, "theta": thetas, "Delta": Deltas}
+    return {"gamma": gammas, "J": Js, "m": ms, "theta": thetas, "Delta": Deltas}

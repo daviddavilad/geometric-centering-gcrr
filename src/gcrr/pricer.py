@@ -112,7 +112,7 @@ def two_tail_call_price(S, K, T, r, params: TreeParameters, m: int | None = None
 
     # Strict exercise threshold
     if m is None:
-        m = strike_location(S, K, params).J_strict
+        m = strike_location(S, K, params).m
 
     # Binomial upper tails P(Bin(n, p) >= m); sf(k) = P(X > k)
     tail_S = binom.sf(m - 1, n, pS)

@@ -95,7 +95,7 @@ def make_figure_paper(results: dict, out_dir: Path):
     # Bottom panel: J_n^+ - N
     for key, _ in SCHEMES:
         out = results[key]
-        threshold = out["J_strict"] - N_arr
+        threshold = out["m"] - N_arr
         if key == "joshi_2009":
             ax_bot.plot(
                 N_VALUES, threshold,

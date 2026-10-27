@@ -161,3 +161,11 @@ def test_half_node_corrected_digital_faster_convergence_even_phase():
         f"Corrected digital not O(1/n): error*n at n={n_values} were "
         f"{scaled_corrected}, max relative deviation = {rel_dev:.4f}"
     )
+
+
+def test_digital_rejects_uncentered_tree():
+    """CRR at K=105, n=200 (file parameters, T=1): gamma_n ~ 101.73, so
+    m_n = 102 != N + 1 = 101, and the centered-tree guard must raise."""
+    params = schemes.crr(S, 105.0, T, r, sigma, 200)
+    with pytest.raises(ValueError):
+        digital_strict_price(S, 105.0, T, r, params)

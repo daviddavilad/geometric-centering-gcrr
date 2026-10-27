@@ -1,23 +1,14 @@
-"""Digital option pricing on binomial trees.
+"""Digital (cash-or-nothing) call prices on centered binomial trees (Section 4).
 
-A strict digital call pays 1 if S_T > K, 0 otherwise. Its binomial price
-is the discounted probability that the terminal index j exceeds the
-strict upper threshold N+1 (in the GCRR-GC strict-threshold sense):
+    D^str_{N,eta} = e^{-rT} Psi_{N,eta}(p_n^B),       payoff 1{S_T > K}
+    D^hn_{N,eta}  = e^{-rT} Psi^hn_{N,eta}(p_n^B),    payoff 1{S_T > K} + (1/2) 1{S_T = K}
+    Psi^hn_{N,eta}(p) = Psi_{N,eta}(p) + ((1 - eta)/2) C(2N, N) p^N (1 - p)^N   (eq. 11)
 
-    D^>_{N,eta} = e^{-rT} * P(Bin(n, p_n^B) >= N+1)
-
-where n = 2N + eta, p_n^B is the bond-numeraire up-probability of the
-underlying tree, and the threshold N+1 is the unified strict threshold
-that GCRR-GC produces for both parities (Section 9.2 of the draft).
-
-This module is intentionally separate from pricer.py:
-    - The call/put pricer uses backward induction (O(n^2) time)
-    - The strict digital reduces to a single binomial tail evaluation
-      via scipy.stats.binom.sf, which is O(n) and numerically stable
-      for large n.
-
-The half-node corrected digital (Section 9.3, Figure 5) will live here
-as well once implemented.
+with n = 2N + eta and Psi_{N,eta}(p) = P(Bin(n, p) >= N + 1). Both prices
+assume the strict exercise threshold is m_n = N + 1, which holds for GCRR-GC
+(Proposition 2.1) and for the odd-step centered benchmark; the half-node
+price also assumes the even-phase strike sits exactly on node N. Both
+conditions are checked, and other trees raise ValueError.
 """
 from __future__ import annotations
 
@@ -25,6 +16,32 @@ import numpy as np
 from scipy.stats import binom
 
 from .pricer import TreeParameters
+from .diagnostics import strike_location
+
+def _check_centered(S, K, params, half_node: bool = False) -> None:
+    """Raise ValueError unless m_n = N + 1 and, for the half-node price at
+    even n, the strike lies exactly on node N (gamma_n = N)."""
+    n = params.n
+    N = n // 2
+    eta = n % 2
+
+    loc = strike_location(S, K, params)
+
+    # Condition 1: Unified strict exercise threshold
+    if loc.m != N + 1:
+        raise ValueError(
+            f"Centered-tree condition failed: "
+            f"strict threshold m={loc.m}, "
+            f"expected N+1={N + 1} for n={n}."
+        )
+
+    # Condition 2: Even-phase central-node strike alignment
+    if half_node and eta == 0 and loc.gamma != N:
+        raise ValueError(
+            f"Half-node condition failed: "
+            f"gamma={loc.gamma}, expected N={N} "
+            f"for even n={n}."
+        )
 
 
 def digital_strict_price(
@@ -44,11 +61,9 @@ def digital_strict_price(
     again j >= N+1 (the geometric-midpoint placement of GCRR-GC).
 
     Args:
-        S: Spot (positive). Not used in this calculation directly but
-            kept for API symmetry with binomial_price.
-        K: Strike (positive). Not used in this calculation directly
-            (the strike enters via params.p, which depends on K through
-            the scheme). Kept for API symmetry.
+        S: Spot (positive). Used by the centered-tree check.
+        K: Strike (positive). Used by the centered-tree check; it also
+            enters through params.p via the scheme.
         T: Time to expiry in years. Used for the discount factor.
         r: Continuously compounded risk-free rate. Used for the discount
             factor.
@@ -58,10 +73,10 @@ def digital_strict_price(
         The discounted strict digital price.
 
     Notes:
-        For GCRR-GC, N+1 is the unified strict threshold (Section 9.2 of
-        the GCRR-GC draft) -- meaning the strike is at the geometric
-        center in odd phase or on the central node in even phase, and
-        the strict tail j >= N+1 captures S_T > K in both cases.
+        For GCRR-GC, N+1 is the unified strict threshold (Proposition 2.1) 
+        - meaning the strike is at the geometric center in odd phase or 
+        on the central node in even phase, and the strict tail j >= N+1
+        captures S_T > K in both cases.
     """
     if S <= 0:
         raise ValueError(f"Spot S must be positive, got {S}")
@@ -69,6 +84,8 @@ def digital_strict_price(
         raise ValueError(f"Strike K must be positive, got {K}")
     if T <= 0:
         raise ValueError(f"Time T must be positive, got {T}")
+
+    _check_centered(S, K, params)
 
     n, p = params.n, params.p
     N = n // 2  # n = 2N+eta => n//2 = N for both parities
@@ -84,9 +101,9 @@ def digital_half_node_corrected_price(
     r: float,
     params: TreeParameters,
 ) -> float:
-    """Half-node corrected digital call price on a binomial tree.
+    """Half-node corrected digital call price on a binomial tree [Section 4, eqs. (11)–(12)].
 
-    The strict digital D^>_{N,eta} = e^{-rT} Psi_{N,eta}(p_n^B) suffers
+    The strict digital D^str_{N,eta} = e^{-rT} Psi_{N,eta}(p_n^B) suffers
     an O(1/sqrt(n)) "central-atom discrepancy" in the even phase: when
     the strike sits exactly on the central terminal node, the strict
     upper threshold j >= N+1 misses the half-mass of the central atom
@@ -95,12 +112,12 @@ def digital_half_node_corrected_price(
     The half-node correction adds back half the central atom for even
     phase (eta = 0) and leaves the odd phase unchanged:
 
-        Psi^*_{N,eta}(p) = Psi_{N,eta}(p) + ((1-eta)/2) * C(2N, N) p^N (1-p)^N
+        Psi^hn_{N,eta}(p) = Psi_{N,eta}(p) + ((1-eta)/2) * C(2N, N) p^N (1-p)^N
 
-    The price is then D^*_{N,eta} = e^{-rT} * Psi^*_{N,eta}(p_n^B).
+    The price is then D^hn_{N,eta} = e^{-rT} * Psi^hn_{N,eta}(p_n^B).
 
     By construction, the corrected digital satisfies the exact symmetry
-        Psi^*_{N,0}(1/2) = Psi^*_{N,1}(1/2) = 1/2,
+        Psi^hn_{N,0}(1/2) = Psi^hn_{N,1}(1/2) = 1/2,
     which removes the leading O(1/sqrt(n)) error and is expected to
     produce O(1/n) convergence in the even phase.
 
@@ -121,6 +138,8 @@ def digital_half_node_corrected_price(
         raise ValueError(f"Strike K must be positive, got {K}")
     if T <= 0:
         raise ValueError(f"Time T must be positive, got {T}")
+    
+    _check_centered(S, K, params, half_node=True)
 
     n, p = params.n, params.p
     N = n // 2

@@ -11,9 +11,6 @@ and differs only in how lambda is chosen:
     - gcrr_fixed:    lambda = const
     - gcrr_xpc:      lambda chosen so a terminal node sits ON the strike (even n)
     - gcrr_gc:       lambda chosen by the parity-free geometric-center condition
-
-Verify each lambda formula against your handwritten derivations before
-trusting numerical output.
 """
 from __future__ import annotations
 
@@ -51,9 +48,9 @@ def gcrr_xpc(S, K, T, r, sigma, n) -> TreeParameters:
     S * u^(n/2) * d^(n/2) exactly on the strike K.
 
     Taking logs of that condition and using h = T/n yields
-        lambda - 1/lambda = 2 log(K/S) / (sigma * sqrt(nT))  =:  A_n,
+        lambda - 1/lambda = 2 log(K/S) / (sigma * sqrt(nT))  =:  kappa_n,
     whose unique positive root is
-        lambda = (A_n + sqrt(A_n^2 + 4)) / 2.
+        lambda = (kappa + sqrt(kappa^2 + 4)) / 2.
 
     This coincides algebraically with the GCRR-GC lambda at eta = 0 (even
     phase). Kept as a separate function for intellectual provenance
@@ -62,23 +59,24 @@ def gcrr_xpc(S, K, T, r, sigma, n) -> TreeParameters:
     if n % 2 != 0:
         raise ValueError(f"GCRR-XPC requires even n, got {n}")
     x = np.log(K / S)
-    A_n = 2.0 * x / (sigma * np.sqrt(n * T))
-    lam = (A_n + np.sqrt(A_n**2 + 4.0)) / 2.0
+    kappa = 2.0 * x / (sigma * np.sqrt(n * T))
+    lam = (kappa + np.sqrt(kappa**2 + 4.0)) / 2.0
     return _gcrr_from_lambda(lam, S, K, T, r, sigma, n)
 
 
 def gcrr_gc(S, K, T, r, sigma, n) -> TreeParameters:
-    """GCRR-GC (Chen-Davila): parity-free geometric-center condition.
+    """GCRR-GC: parity-free geometric-center condition (Proposition 2.1).
 
-    From draft Proposition 4.1:
-        A_n    = 2 ln(X/S) / (sigma * sqrt(n*T))
-        lambda = ( A_n + sqrt(A_n^2 + 4) ) / 2
-
-    Works for both even and odd n. NOTE: verify against your derivation.
+    Imposes K^2 = S_{n,N} S_{n,N+eta}, which places the strike on the central
+    node for even n and at the geometric midpoint of the two central nodes
+    for odd n. The unique positive stretch is
+        kappa_n  = 2 log(K/S) / (sigma sqrt(nT)),
+        lambda_n = (kappa_n + sqrt(kappa_n^2 + 4)) / 2.
+    For even n this coincides with gcrr_xpc (Chung and Shih, 2007).
     """
     x = np.log(K / S)
-    A_n = 2.0 * x / (sigma * np.sqrt(n * T))
-    lam = (A_n + np.sqrt(A_n**2 + 4.0)) / 2.0
+    kappa = 2.0 * x / (sigma * np.sqrt(n * T))
+    lam = (kappa + np.sqrt(kappa**2 + 4.0)) / 2.0
     return _gcrr_from_lambda(lam, S, K, T, r, sigma, n)
 
 

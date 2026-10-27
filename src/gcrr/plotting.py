@@ -75,8 +75,7 @@ def set_style():
 
 # --- Paper (monochrome) style ---
 #
-# Per Chen Jul 15 email, figures should follow Chung-Shih (2007)
-# presentation style. Chung-Shih uses:
+# Paper figures follow the monochrome style of Chung and Shih (2007):
 #   - all-black lines
 #   - line style differentiation (solid, dashed, dotted)
 #   - marker shape differentiation (circle, square, triangle, cross)

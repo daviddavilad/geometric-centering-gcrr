@@ -110,7 +110,7 @@ def test_gcrr_gc_strict_threshold_is_uniformly_N_plus_1():
     n_values = np.arange(50, 250)
     out = strike_location_sweep(S, K, T, r, sigma, schemes.gcrr_gc, n_values)
     N_arr = (n_values - n_values % 2) // 2
-    threshold = out["J_strict"] - N_arr
+    threshold = out["m"] - N_arr
     np.testing.assert_array_equal(
         threshold, np.ones(len(n_values), dtype=int),
         err_msg="GCRR-GC's strict upper threshold J_n^+ - N is not uniformly 1"
