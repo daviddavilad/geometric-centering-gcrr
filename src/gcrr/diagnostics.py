@@ -18,8 +18,8 @@ for even n, Delta_n = 0 for odd n, and m_n = N + 1 for every n.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import math
+from dataclasses import dataclass
 
 import numpy as np
 

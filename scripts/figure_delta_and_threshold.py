@@ -27,13 +27,11 @@ import numpy as np
 from gcrr import schemes
 from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import (
-    SCHEME_COLORS,
     SCHEME_LABELS,
+    plot_paper_series,
     set_style,
     set_style_paper,
-    plot_paper_series,
 )
-
 
 # --- Toggle: also generate legacy color version? ---
 WRITE_COLOR = False
@@ -67,7 +65,7 @@ def make_figure_paper(results: dict, out_dir: Path):
     fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(8, 7), sharex=True)
 
     # Top panel: Delta_n
-    from gcrr.plotting import SCHEME_STYLES_PAPER, SCHEME_LABELS
+    from gcrr.plotting import SCHEME_LABELS
 
     for key, _ in SCHEMES:
         out = results[key]
@@ -163,8 +161,6 @@ def make_figure_color(results: dict, out_dir: Path):
     N_arr = (N_VALUES - N_VALUES % 2) // 2
 
     fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(11, 9), sharex=True)
-
-    sizes = {"crr": 20, "tian_1999": 10, "joshi_2009": 10, "gcrr_gc": 1}
 
     for key, _ in SCHEMES:
         out = results[key]

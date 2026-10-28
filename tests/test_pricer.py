@@ -1,11 +1,11 @@
-import pytest
 import numpy as np
+import pytest
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
-from gcrr.theory import A_eta
 from gcrr.errors import fit_leading_constant
 from gcrr.pricer import binomial_price, two_tail_call_price
+from gcrr.theory import A_eta
 
 
 @pytest.mark.parametrize(

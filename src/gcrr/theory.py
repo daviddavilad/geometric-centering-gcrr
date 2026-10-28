@@ -34,7 +34,7 @@ def _appendix_a_quantities(S, K, T, r, sigma):
 
 def rho_B(S, K, T, r, sigma) -> float:
     """Appendix A.3:  rho_B = (1/s) [ (b^2 - x^2)/2 - s^4/24 - (b - s^2/2) E ]."""
-    R, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
+    _, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
 
     # Compute and return rho_B
     return ((b**2 - x**2) / 2 - s**4 / 24 - (b - s**2 / 2) * E) / s
@@ -42,7 +42,7 @@ def rho_B(S, K, T, r, sigma) -> float:
 
 def rho_S(S, K, T, r, sigma) -> float:
     """Appendix A.3:  rho_S = (1/s) [ (x^2 - b^2)/2 + s^4/24 - (b + s^2/2) E ]."""
-    R, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
+    _, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
 
     # Compute and return rho_S
     return ((x**2 - b**2) / 2 + s**4 / 24 - (b + s**2 / 2) * E) / s

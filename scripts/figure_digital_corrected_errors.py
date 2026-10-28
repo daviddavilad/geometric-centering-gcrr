@@ -42,11 +42,10 @@ from gcrr.digital import digital_half_node_corrected_price
 from gcrr.plotting import (
     SCHEME_COLORS,
     SCHEME_LABELS,
+    plot_paper_series,
     set_style,
     set_style_paper,
-    plot_paper_series,
 )
-
 
 # --- Toggle: also generate legacy color versions? ---
 WRITE_COLOR = False

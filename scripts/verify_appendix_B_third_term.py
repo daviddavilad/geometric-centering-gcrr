@@ -12,8 +12,8 @@ Run:  uv run python scripts/verify_appendix_B_third_term.py
 Deps: sympy (ships mpmath).
 """
 
-import sympy as sp
 import mpmath as mp
+import sympy as sp
 
 mp.mp.dps = 40
 phi = mp.npdf

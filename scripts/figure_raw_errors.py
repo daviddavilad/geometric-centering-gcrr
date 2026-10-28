@@ -31,16 +31,14 @@ import numpy as np
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
-from gcrr.pricer import binomial_price
 from gcrr.plotting import (
     SCHEME_COLORS,
     SCHEME_LABELS,
+    plot_paper_series,
     set_style,
     set_style_paper,
-    plot_paper_series,
-    MARKER_EVERY_PAPER,
 )
-
+from gcrr.pricer import binomial_price
 
 # --- Toggle: also generate legacy color versions? ---
 WRITE_COLOR = False

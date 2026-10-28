@@ -4,12 +4,12 @@ import numpy as np
 import pytest
 
 from gcrr.theory import (
+    A_eta,
+    digital_hn_coef,
+    digital_strict_even_coef,
+    phase_gap,
     rho_B,
     rho_S,
-    A_eta,
-    phase_gap,
-    digital_strict_even_coef,
-    digital_hn_coef,
 )
 
 

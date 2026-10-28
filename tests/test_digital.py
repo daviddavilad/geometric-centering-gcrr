@@ -2,13 +2,10 @@
 
 import numpy as np
 import pytest
-from scipy.stats import norm
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_digital_strict
-from gcrr.digital import digital_strict_price
-from gcrr.digital import digital_strict_price, digital_half_node_corrected_price
-
+from gcrr.digital import digital_half_node_corrected_price, digital_strict_price
 
 # Standard ATM-ish parameter set; matches the call test conventions.
 S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20

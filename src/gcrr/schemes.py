@@ -136,7 +136,7 @@ def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
     # Ideal up-count (eq. 10) and nearest integer j_0 (eq. 11)
     log_K_over_S = np.log(K / S)
     eta = (log_K_over_S - n * np.log(d_0)) / np.log(u_0 / d_0)
-    j_0 = int(round(eta))
+    j_0 = int(np.rint(eta))
 
     # Strike-aligning tilt (eq. 13)
     lam_tilt = (log_K_over_S - (2 * j_0 - n) * sigma * sqrt_dt) / (n * sigma**2 * dt)

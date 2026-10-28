@@ -36,9 +36,9 @@ roughly O(n^2) = 25M operations in NumPy.
 
 from __future__ import annotations
 
+import time
 from itertools import product
 from pathlib import Path
-import time
 
 import numpy as np
 import pandas as pd
@@ -46,7 +46,6 @@ import pandas as pd
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
 from gcrr.pricer import binomial_price
-
 
 # --- WAND-style parameter panel (Section 5.1) ---
 WAND_S = 40.0

@@ -1,7 +1,6 @@
 """Tests for phase-separated error infrastructure."""
 
 import numpy as np
-import pytest
 
 from gcrr import schemes
 from gcrr.errors import phase_separated_errors

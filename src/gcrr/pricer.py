@@ -9,8 +9,9 @@ strike-location bookkeeping that the GCRR family needs.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from scipy.stats import binom
+
 import numpy as np
+from scipy.stats import binom
 
 
 @dataclass(frozen=True)

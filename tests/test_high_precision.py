@@ -9,9 +9,9 @@ import pytest
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
-from gcrr.pricer import two_tail_call_price
-from gcrr.high_precision import bs_call_mp, gcrr_gc_call_mp
 from gcrr.extrapolation import richardson_same_phase
+from gcrr.high_precision import bs_call_mp, gcrr_gc_call_mp
+from gcrr.pricer import two_tail_call_price
 
 S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20
 

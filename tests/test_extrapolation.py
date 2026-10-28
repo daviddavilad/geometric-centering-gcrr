@@ -9,13 +9,13 @@ import pytest
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
+from gcrr.extrapolation import (
+    phase_adjust,
+    richardson_adjacent,
+    richardson_same_phase,
+)
 from gcrr.pricer import two_tail_call_price
 from gcrr.theory import phase_gap
-from gcrr.extrapolation import (
-    richardson_same_phase,
-    richardson_adjacent,
-    phase_adjust,
-)
 
 # Parameters and helpers
 S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20

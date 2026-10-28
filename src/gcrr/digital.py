@@ -16,8 +16,8 @@ from __future__ import annotations
 import numpy as np
 from scipy.stats import binom
 
-from .pricer import TreeParameters
 from .diagnostics import strike_location
+from .pricer import TreeParameters
 
 
 def _check_centered(S, K, params, half_node: bool = False) -> None:

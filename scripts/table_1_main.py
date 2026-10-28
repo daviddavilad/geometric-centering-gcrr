@@ -28,13 +28,11 @@ Outputs (in tables/):
 
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from gcrr import schemes
 from gcrr.black_scholes import bs_call
 from gcrr.pricer import binomial_price
-
 
 # --- Fixed parameters (Section 5.1 primary non-ATM cases) ---
 S = 100.0

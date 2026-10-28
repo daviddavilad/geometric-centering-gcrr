@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from gcrr import schemes
-from gcrr.pricer import binomial_price
 from gcrr.black_scholes import bs_call
+from gcrr.pricer import binomial_price
 
 # Standard test case
 S, K, T, r, sigma = 100.0, 100.0, 1.0, 0.05, 0.20

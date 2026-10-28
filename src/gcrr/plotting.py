@@ -13,7 +13,6 @@ with hue and lightness chosen so adjacent series in a legend don't blur.
 from __future__ import annotations
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 # Color palette for the six schemes.
 # Order: CRR, GCRR-fixed, GCRR-XPC, Tian (1999), Joshi (2009), GCRR-GC.

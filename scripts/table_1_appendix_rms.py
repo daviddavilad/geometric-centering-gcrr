@@ -29,7 +29,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-
 SELECTED_N = [50, 100, 500, 1000, 5000]
 SCHEMES_ORDER = ["crr", "gcrr_gc", "tian_1999", "joshi_2009"]
 SCHEME_DISPLAY = {
