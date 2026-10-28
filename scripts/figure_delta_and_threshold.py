@@ -15,10 +15,11 @@ m_n - N = 1 for all n, regardless of parity.
 Generates:
     figures_paper/delta_and_threshold.{pdf,png}
 
-Set WRITE_COLOR = True to also generate legacy color version in
-figures/ (used by talks/slides).
+Run with --color to write the per-scheme panel redesign (color and
+black-and-white) to figures/color_preview/.
 """
 
+import argparse
 from pathlib import Path
 
 import matplotlib
@@ -31,14 +32,10 @@ from gcrr.diagnostics import strike_location_sweep
 from gcrr.plotting import (
     SCHEME_LABELS,
     plot_paper_series,
-    set_style,
     set_style_paper,
 )
 
 matplotlib.use("Agg")  # same layout on every OS
-
-# --- Toggle: also generate legacy color version? ---
-WRITE_COLOR = False
 
 # --- Parameters (Section 5.1 primary non-ATM case) ---
 S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
@@ -50,6 +47,10 @@ SCHEMES = [
     ("crr", schemes.crr),
     ("tian_1999", schemes.tian_1999),
 ]
+
+# Panel redesign: one row per scheme, so no series hides another.
+# Joshi is omitted: here it repeats GCRR-GC's odd phase exactly.
+PANEL_SCHEMES = ["crr", "tian_1999", "gcrr_gc"]
 
 
 def _compute_results():
@@ -160,100 +161,41 @@ def make_figure_paper(results: dict, out_dir: Path):
     plt.close(fig)
 
 
-def make_figure_color(results: dict, out_dir: Path):
-    """Legacy color figure: preserved for talks/slides."""
-    set_style()
+def make_figure_panels(results: dict, out_dir: Path, color: bool = False):
+    """One row per scheme: Delta_n on the left, m_n - N on the right."""
+    set_style_paper()
 
     N_arr = (N_VALUES - N_VALUES % 2) // 2
+    fig, axes = plt.subplots(
+        len(PANEL_SCHEMES), 2, figsize=(8, 6), sharex=True, sharey="col"
+    )
 
-    fig, (ax_top, ax_bot) = plt.subplots(2, 1, figsize=(11, 9), sharex=True)
-
-    for key, _ in SCHEMES:
+    for row, key in zip(axes, PANEL_SCHEMES):
+        ax_delta, ax_m = row
         out = results[key]
-        if key == "joshi_2009":
-            ax_top.plot(
-                N_VALUES,
-                out["Delta"],
-                marker="x",
-                linestyle="none",
-                color="#7F7F7F",
-                markersize=2.0,
-                markeredgewidth=0.2,
-                label=SCHEME_LABELS[key],
-            )
-        elif key == "tian_1999":
-            ax_top.plot(
-                N_VALUES,
-                out["Delta"],
-                marker="v",
-                linestyle="none",
-                color="#7F7F7F",
-                markersize=1.5,
-                markeredgewidth=0.2,
-                fillstyle="none",
-                label=SCHEME_LABELS[key],
-            )
-        else:
-            plot_paper_series(ax_top, N_VALUES, out["Delta"], key)
+        plot_paper_series(ax_delta, N_VALUES, out["Delta"], key, color=color)
+        plot_paper_series(ax_m, N_VALUES, out["m"] - N_arr, key, color=color)
 
-    ax_top.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)
-    ax_top.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
-    ax_top.axhline(
-        -1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--"
-    )
-    ax_top.set_ylabel(r"$\Delta_n = 1 - 2\theta_n$")
-    ax_top.set_ylim(-1.15, 1.15)
+        # Solid light gray instead of transparency (journal rule)
+        for level, ls in [(0, "-"), (1, "--"), (-1, "--")]:
+            ax_delta.axhline(level, color="0.6", linewidth=0.4, linestyle=ls, zorder=0)
+        ax_m.axhline(1, color="0.6", linewidth=0.4, linestyle="--", zorder=0)
 
-    for key, _ in SCHEMES:
-        out = results[key]
-        if key == "joshi_2009":
-            ax_bot.plot(
-                N_VALUES,
-                out["m"] - N_arr,
-                marker="x",
-                linestyle="none",
-                color="#7F7F7F",
-                markersize=2.0,
-                markeredgewidth=0.2,
-                label="_nolegend_",
-            )
-        elif key == "tian_1999":
-            ax_bot.plot(
-                N_VALUES,
-                out["m"] - N_arr,
-                marker="v",
-                linestyle="none",
-                color="#7F7F7F",
-                markersize=1.5,
-                markeredgewidth=0.2,
-                fillstyle="none",
-                label="_nolegend_",
-            )
-        else:
-            plot_paper_series(
-                ax_bot, N_VALUES, out["m"] - N_arr, key, label="_nolegend_"
-            )
+        ax_delta.set_ylabel(SCHEME_LABELS[key])
+        ax_delta.set_ylim(-1.15, 1.15)
+        ax_delta.set_yticks([-1, 0, 1])
+        ax_m.yaxis.set_major_locator(MaxNLocator(integer=True))
 
-    ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
-    ax_bot.set_xlabel(r"$n$ (periods)")
-    ax_bot.set_ylabel(r"$m_n - N$")
+    axes[0, 0].set_title(r"$\Delta_n = 1 - 2\theta_n$")
+    axes[0, 1].set_title(r"$m_n - N$")
+    for ax in axes[-1]:
+        ax.set_xlabel(r"$n$ (periods)")
 
-    ax_top.legend(
-        loc="center left",
-        bbox_to_anchor=(1.02, 0.5),
-        frameon=True,
-        framealpha=0.9,
-    )
+    fig.tight_layout()
 
-    fig.suptitle(
-        f"Strike-location diagnostics  "
-        f"($S={S:.0f}$, $K={K:.0f}$, $T={T}$, $\\sigma={sigma}$)",
-        fontsize=12,
-    )
-    fig.tight_layout(rect=(0, 0, 0.85, 0.97))
-
-    out_pdf = out_dir / "delta_and_threshold.pdf"
-    out_png = out_dir / "delta_and_threshold.png"
+    stem = "delta_and_threshold_panels" + ("" if color else "_bw")
+    out_pdf = out_dir / f"{stem}.pdf"
+    out_png = out_dir / f"{stem}.png"
     fig.savefig(out_pdf)
     fig.savefig(out_png, dpi=150)
     print(f"Saved {out_pdf} (+ .png)")
@@ -261,20 +203,26 @@ def make_figure_color(results: dict, out_dir: Path):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser.add_argument(
+        "--color",
+        action="store_true",
+        help="write the panel redesign to figures/color_preview/",
+    )
+    args = parser.parse_args()
+
     project_root = Path(__file__).parent.parent
-
-    # Paper (monochrome) output
-    paper_dir = project_root / "figures_paper"
-    paper_dir.mkdir(exist_ok=True)
-
     results = _compute_results()
-    make_figure_paper(results, paper_dir)
 
-    # Optional: legacy color output
-    if WRITE_COLOR:
-        color_dir = project_root / "figures"
-        color_dir.mkdir(exist_ok=True)
-        make_figure_color(results, color_dir)
+    if args.color:
+        preview_dir = project_root / "figures" / "color_preview"
+        preview_dir.mkdir(parents=True, exist_ok=True)
+        make_figure_panels(results, preview_dir, color=True)
+        make_figure_panels(results, preview_dir, color=False)
+    else:
+        paper_dir = project_root / "figures_paper"
+        paper_dir.mkdir(exist_ok=True)
+        make_figure_paper(results, paper_dir)
 
 
 if __name__ == "__main__":
