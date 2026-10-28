@@ -23,6 +23,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.ticker import MaxNLocator
 
 from gcrr import schemes
 from gcrr.diagnostics import strike_location_sweep
@@ -136,11 +137,13 @@ def make_figure_paper(results: dict, out_dir: Path):
     ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
     ax_bot.set_xlabel(r"$n$ (periods)")
     ax_bot.set_ylabel(r"$m_n - N$")
+    ax_bot.yaxis.set_major_locator(MaxNLocator(integer=True))
 
     ax_top.legend(
         loc="center left",
         bbox_to_anchor=(1.02, 0.5),
         frameon=True,
+        markerscale=3,
     )
 
     # fig.suptitle removed: parameters live in the Word caption
