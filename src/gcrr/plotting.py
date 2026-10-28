@@ -149,14 +149,9 @@ def set_style_paper():
             "figure.dpi": 100,
             "savefig.dpi": 300,
             "savefig.bbox": "tight",
-            # Fonts (Chung-Shih uses serif, close to Times)
+            # Fonts: STIX (Times-style) ships with matplotlib, so figures match on every machine
             "font.family": "serif",
-            "font.serif": [
-                "Times New Roman",
-                "Times",
-                "Computer Modern Roman",
-                "DejaVu Serif",
-            ],
+            "font.serif": ["STIXGeneral"],
             "font.size": 10,
             "axes.labelsize": 11,
             "axes.titlesize": 12,
@@ -181,7 +176,7 @@ def set_style_paper():
             "legend.fancybox": False,
             # Math text
             "text.usetex": False,
-            "mathtext.fontset": "cm",
+            "mathtext.fontset": "stix",
         }
     )
 
