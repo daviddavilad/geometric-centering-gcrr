@@ -19,6 +19,7 @@ Test case: European call.
 Schemes shown: CRR (gray baseline), Tian (1999), Joshi (2009), GCRR-GC.
 GCRR-fixed and GCRR-XPC omitted for legibility of the headline figure.
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -43,10 +44,10 @@ S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
 N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
-    ("crr",        schemes.crr),
-    ("tian_1999",  schemes.tian_1999),
+    ("crr", schemes.crr),
+    ("tian_1999", schemes.tian_1999),
     ("joshi_2009", schemes.joshi_2009),
-    ("gcrr_gc",    schemes.gcrr_gc),
+    ("gcrr_gc", schemes.gcrr_gc),
 ]
 
 
@@ -67,7 +68,9 @@ def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path
     for key, _ in SCHEMES:
         out = results[key]
         plot_paper_series(ax_even, out.n_even, out.scaled_err_even, key)
-        plot_paper_series(ax_odd, out.n_odd, out.scaled_err_odd, key, label="_nolegend_")
+        plot_paper_series(
+            ax_odd, out.n_odd, out.scaled_err_odd, key, label="_nolegend_"
+        )
 
     for ax in axes:
         ax.axhline(0, color="black", linewidth=0.5, alpha=0.6, zorder=0)
@@ -79,8 +82,10 @@ def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path
 
     handles, labels = ax_even.get_legend_handles_labels()
     fig.legend(
-        handles, labels,
-        loc="lower center", ncol=len(labels),
+        handles,
+        labels,
+        loc="lower center",
+        ncol=len(labels),
         bbox_to_anchor=(0.5, -0.02),
         frameon=True,
     )
@@ -107,14 +112,23 @@ def make_figure_color(K: float, moneyness_tag: str, results: dict, out_dir: Path
     for key, _ in SCHEMES:
         out = results[key]
         ax_even.scatter(
-            out.n_even, out.scaled_err_even,
-            color=SCHEME_COLORS[key], marker="o", s=sizes[key],
-            alpha=0.85, label=SCHEME_LABELS[key], edgecolors="none",
+            out.n_even,
+            out.scaled_err_even,
+            color=SCHEME_COLORS[key],
+            marker="o",
+            s=sizes[key],
+            alpha=0.85,
+            label=SCHEME_LABELS[key],
+            edgecolors="none",
         )
         ax_odd.scatter(
-            out.n_odd, out.scaled_err_odd,
-            color=SCHEME_COLORS[key], marker="o", s=sizes[key],
-            alpha=0.85, edgecolors="none",
+            out.n_odd,
+            out.scaled_err_odd,
+            color=SCHEME_COLORS[key],
+            marker="o",
+            s=sizes[key],
+            alpha=0.85,
+            edgecolors="none",
         )
 
     for ax in axes:
@@ -127,10 +141,13 @@ def make_figure_color(K: float, moneyness_tag: str, results: dict, out_dir: Path
 
     handles, labels = ax_even.get_legend_handles_labels()
     fig.legend(
-        handles, labels,
-        loc="lower center", ncol=len(labels),
+        handles,
+        labels,
+        loc="lower center",
+        ncol=len(labels),
         bbox_to_anchor=(0.5, -0.02),
-        frameon=True, framealpha=0.9,
+        frameon=True,
+        framealpha=0.9,
     )
 
     fig.suptitle(

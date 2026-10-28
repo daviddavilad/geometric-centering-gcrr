@@ -1,4 +1,5 @@
 """Strike-location diagnostic tests."""
+
 import math
 
 import numpy as np
@@ -79,7 +80,7 @@ def test_gcrr_gc_delta_is_parity_locked():
     across the full sweep -- the 'parity-free' property in Proposition 2.1."""
     n_values = np.arange(50, 250)
     out = strike_location_sweep(S, K, T, r, sigma, schemes.gcrr_gc, n_values)
-    even_mask = (n_values % 2 == 0)
+    even_mask = n_values % 2 == 0
     odd_mask = ~even_mask
     np.testing.assert_allclose(out["Delta"][even_mask], 1.0, atol=1e-10)
     np.testing.assert_allclose(out["Delta"][odd_mask], 0.0, atol=1e-10)
@@ -112,6 +113,7 @@ def test_gcrr_gc_strict_threshold_is_uniformly_N_plus_1():
     N_arr = (n_values - n_values % 2) // 2
     threshold = out["m"] - N_arr
     np.testing.assert_array_equal(
-        threshold, np.ones(len(n_values), dtype=int),
-        err_msg="GCRR-GC's strict upper threshold m_n - N is not uniformly 1"
+        threshold,
+        np.ones(len(n_values), dtype=int),
+        err_msg="GCRR-GC's strict upper threshold m_n - N is not uniformly 1",
     )

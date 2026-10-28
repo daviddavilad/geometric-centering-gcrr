@@ -15,6 +15,7 @@ phase-wise smooth convergence, this scales to A_eta as n grows. A flat
 line at level A_eta (one for each parity) is the visual signature of
 the GCRR-GC paper's main theorem.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -23,6 +24,7 @@ import numpy as np
 
 from .black_scholes import bs_call, bs_put
 from .pricer import binomial_price
+
 
 @dataclass(frozen=True)
 class PhaseSeparatedErrors:
@@ -34,6 +36,7 @@ class PhaseSeparatedErrors:
         scaled_err_even, scaled_err_odd: n * err, the diagnostic quantity
             for visualizing phase-wise smooth convergence.
     """
+
     n_even: np.ndarray
     n_odd: np.ndarray
     err_even: np.ndarray
@@ -41,7 +44,17 @@ class PhaseSeparatedErrors:
     scaled_err_even: np.ndarray
     scaled_err_odd: np.ndarray
 
-def phase_separated_errors(S: float, K: float, T: float, r: float, sigma: float, scheme, n_values: np.ndarray, option_type: str = "call") -> PhaseSeparatedErrors:
+
+def phase_separated_errors(
+    S: float,
+    K: float,
+    T: float,
+    r: float,
+    sigma: float,
+    scheme,
+    n_values: np.ndarray,
+    option_type: str = "call",
+) -> PhaseSeparatedErrors:
     """Compute pricing errors across a sweep of n, separated by parity.
 
     Uses the *effective* n actually consumed by the pricer for both the
@@ -82,7 +95,7 @@ def phase_separated_errors(S: float, K: float, T: float, r: float, sigma: float,
     n_eff = n_eff[unique_idx]
     errs = errs[unique_idx]
 
-    even_mask = (n_eff % 2 == 0)
+    even_mask = n_eff % 2 == 0
     odd_mask = ~even_mask
 
     return PhaseSeparatedErrors(
@@ -94,6 +107,7 @@ def phase_separated_errors(S: float, K: float, T: float, r: float, sigma: float,
         scaled_err_odd=n_eff[odd_mask] * errs[odd_mask],
     )
 
+
 def fit_leading_constant(n_values, values) -> float:
     """Least-squares fit of y_n = A + B*n^(-1/2) + C/n.
 
@@ -102,11 +116,13 @@ def fit_leading_constant(n_values, values) -> float:
     n = np.asarray(n_values, dtype=float)
     y = np.asarray(values, dtype=float)
 
-    X = np.column_stack([
-        np.ones_like(n),
-        n**(-0.5),
-        1.0 / n,
-    ])
+    X = np.column_stack(
+        [
+            np.ones_like(n),
+            n ** (-0.5),
+            1.0 / n,
+        ]
+    )
 
     coef, *_ = np.linalg.lstsq(X, y, rcond=None)
 

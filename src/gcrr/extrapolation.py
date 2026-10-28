@@ -9,7 +9,9 @@ in general. Consequences tested in Table 3:
     phase_adjust            C^PA_n = C_{N,eta} - eta * (A_1 - A_0) / n puts
                             both phases on the even-phase track A_0 / n.
 """
+
 from __future__ import annotations
+
 
 def richardson_same_phase(C_n: float, C_n2: float, n: int) -> float:
     """Same-phase Richardson extrapolation from n and n+2 (Section 3.3):
@@ -18,6 +20,7 @@ def richardson_same_phase(C_n: float, C_n2: float, n: int) -> float:
     """
     return ((n + 2) * C_n2 - n * C_n) / 2
 
+
 def richardson_adjacent(C_n: float, C_n1: float, n: int) -> float:
     """Adjacent-count Richardson extrapolation from n and n+1:
         (n + 1) C_{n+1} - n C_n.
@@ -25,6 +28,7 @@ def richardson_adjacent(C_n: float, C_n1: float, n: int) -> float:
     C_BS + (A_1 - A_0) for even n and C_BS - (A_1 - A_0) for odd n.
     """
     return (n + 1) * C_n1 - n * C_n
+
 
 def phase_adjust(C: float, n: int, gap: float) -> float:
     """Phase-adjusted price (Section 3.3):  C^PA_n = C_n - eta * gap / n,

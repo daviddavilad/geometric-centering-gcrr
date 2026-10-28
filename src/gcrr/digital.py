@@ -10,6 +10,7 @@ assume the strict exercise threshold is m_n = N + 1, which holds for GCRR-GC
 price also assumes the even-phase strike sits exactly on node N. Both
 conditions are checked, and other trees raise ValueError.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -17,6 +18,7 @@ from scipy.stats import binom
 
 from .pricer import TreeParameters
 from .diagnostics import strike_location
+
 
 def _check_centered(S, K, params, half_node: bool = False) -> None:
     """Raise ValueError unless m_n = N + 1 and, for the half-node price at
@@ -73,8 +75,8 @@ def digital_strict_price(
         The discounted strict digital price.
 
     Notes:
-        For GCRR-GC, N+1 is the unified strict threshold (Proposition 2.1) 
-        - meaning the strike is at the geometric center in odd phase or 
+        For GCRR-GC, N+1 is the unified strict threshold (Proposition 2.1)
+        - meaning the strike is at the geometric center in odd phase or
         on the central node in even phase, and the strict tail j >= N+1
         captures S_T > K in both cases.
     """
@@ -138,7 +140,7 @@ def digital_half_node_corrected_price(
         raise ValueError(f"Strike K must be positive, got {K}")
     if T <= 0:
         raise ValueError(f"Time T must be positive, got {T}")
-    
+
     _check_centered(S, K, params, half_node=True)
 
     n, p = params.n, params.p

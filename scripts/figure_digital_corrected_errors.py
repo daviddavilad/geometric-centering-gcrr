@@ -30,6 +30,7 @@ Generates two figures:
 Set WRITE_COLOR = True to also generate legacy color versions in
 figures/ (used by talks/slides).
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -56,7 +57,7 @@ N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
     ("joshi_2009", schemes.joshi_2009),
-    ("gcrr_gc",    schemes.gcrr_gc),
+    ("gcrr_gc", schemes.gcrr_gc),
 ]
 
 
@@ -79,7 +80,7 @@ def compute_phase_separated_corrected_errors(K, scheme_fn, n_values):
     n_eff = n_eff[unique_idx]
     errs = errs[unique_idx]
 
-    even_mask = (n_eff % 2 == 0)
+    even_mask = n_eff % 2 == 0
     odd_mask = ~even_mask
 
     return {
@@ -107,7 +108,9 @@ def make_figure_paper(K, moneyness_tag, results, out_dir):
     for key, _ in SCHEMES:
         out = results[key]
         if len(out["n_even"]) > 0:
-            plot_paper_series(ax_even, out["n_even"], out["err_even"], key, label="_nolegend_")
+            plot_paper_series(
+                ax_even, out["n_even"], out["err_even"], key, label="_nolegend_"
+            )
         if len(out["n_odd"]) > 0:
             plot_paper_series(ax_odd, out["n_odd"], out["err_odd"], key)
 
@@ -144,15 +147,24 @@ def make_figure_color(K, moneyness_tag, results, out_dir):
         out = results[key]
         if len(out["n_even"]) > 0:
             ax_even.scatter(
-                out["n_even"], out["err_even"],
-                color=SCHEME_COLORS[key], marker="o", s=sizes[key],
-                alpha=0.85, edgecolors="none",
+                out["n_even"],
+                out["err_even"],
+                color=SCHEME_COLORS[key],
+                marker="o",
+                s=sizes[key],
+                alpha=0.85,
+                edgecolors="none",
             )
         if len(out["n_odd"]) > 0:
             ax_odd.scatter(
-                out["n_odd"], out["err_odd"],
-                color=SCHEME_COLORS[key], marker="o", s=sizes[key],
-                alpha=0.85, label=SCHEME_LABELS[key], edgecolors="none",
+                out["n_odd"],
+                out["err_odd"],
+                color=SCHEME_COLORS[key],
+                marker="o",
+                s=sizes[key],
+                alpha=0.85,
+                label=SCHEME_LABELS[key],
+                edgecolors="none",
             )
 
     for ax in (ax_even, ax_odd):

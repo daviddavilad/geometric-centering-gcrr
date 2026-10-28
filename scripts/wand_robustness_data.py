@@ -33,6 +33,7 @@ Schemes computed:
 Runtime: approximately 3-5 minutes. Each binomial price at n=5000 is
 roughly O(n^2) = 25M operations in NumPy.
 """
+
 from __future__ import annotations
 
 from itertools import product
@@ -71,10 +72,10 @@ def _build_n_grid() -> np.ndarray:
     Joshi's odd-only construction maps consecutive (n, n+1) pairs to
     the same odd n_eff, so its row count after dedup is half the others'.
     """
-    very_low = np.array([50, 100, 150])                 # 3 anchors: covers n=50, 100
-    low = np.arange(200, 500, 50)                       # 6 anchors: 200, 250, ..., 450
-    mid = np.arange(500, 1000, 100)                     # 5 anchors: 500, 600, ..., 900
-    high = np.arange(1000, 5001, 200)                   # 21 anchors: 1000, 1200, ..., 5000
+    very_low = np.array([50, 100, 150])  # 3 anchors: covers n=50, 100
+    low = np.arange(200, 500, 50)  # 6 anchors: 200, 250, ..., 450
+    mid = np.arange(500, 1000, 100)  # 5 anchors: 500, 600, ..., 900
+    high = np.arange(1000, 5001, 200)  # 21 anchors: 1000, 1200, ..., 5000
 
     anchors = np.concatenate([very_low, low, mid, high])  # 35 even anchors
 
@@ -89,9 +90,9 @@ N_GRID = _build_n_grid()
 
 # --- Schemes to evaluate (subset of full library) ---
 SCHEMES = {
-    "crr":        schemes.crr,
-    "gcrr_gc":    schemes.gcrr_gc,
-    "tian_1999":  schemes.tian_1999,
+    "crr": schemes.crr,
+    "gcrr_gc": schemes.gcrr_gc,
+    "tian_1999": schemes.tian_1999,
     "joshi_2009": schemes.joshi_2009,
 }
 
@@ -102,14 +103,16 @@ def build_cases() -> list[dict]:
     for case_id, (K, sigma, T) in enumerate(
         product(WAND_K_VALUES, WAND_SIGMA_VALUES, WAND_T_VALUES), start=1
     ):
-        cases.append({
-            "case_id": case_id,
-            "S": WAND_S,
-            "K": K,
-            "T": T,
-            "r": WAND_R,
-            "sigma": sigma,
-        })
+        cases.append(
+            {
+                "case_id": case_id,
+                "S": WAND_S,
+                "K": K,
+                "T": T,
+                "r": WAND_R,
+                "sigma": sigma,
+            }
+        )
     return cases
 
 
@@ -139,33 +142,43 @@ def compute_case_scheme_rows(case: dict, scheme_name: str, scheme_fn) -> list[di
         scaled_error = n_eff * error
         eta = n_eff % 2
 
-        rows.append({
-            "case_id": case["case_id"],
-            "S": S, "K": K, "T": T, "r": r, "sigma": sigma,
-            "scheme": scheme_name,
-            "n_req": int(n_req),
-            "n_eff": int(n_eff),
-            "eta": int(eta),
-            "price": price,
-            "bs_price": bs_price,
-            "error": error,
-            "scaled_error": scaled_error,
-        })
+        rows.append(
+            {
+                "case_id": case["case_id"],
+                "S": S,
+                "K": K,
+                "T": T,
+                "r": r,
+                "sigma": sigma,
+                "scheme": scheme_name,
+                "n_req": int(n_req),
+                "n_eff": int(n_eff),
+                "eta": int(eta),
+                "price": price,
+                "bs_price": bs_price,
+                "error": error,
+                "scaled_error": scaled_error,
+            }
+        )
     return rows
 
 
 def main():
     cases = build_cases()
-    print(f"WAND-style panel: {len(cases)} cases x {len(SCHEMES)} schemes "
-          f"x ~{len(N_GRID)} n values")
+    print(
+        f"WAND-style panel: {len(cases)} cases x {len(SCHEMES)} schemes "
+        f"x ~{len(N_GRID)} n values"
+    )
     print(f"Total: ~{len(cases) * len(SCHEMES) * len(N_GRID)} binomial computations")
     print()
 
     t_start = time.time()
     all_rows = []
     for case in cases:
-        print(f"Case {case['case_id']}/{len(cases)}: "
-              f"K={case['K']}, sigma={case['sigma']}, T={case['T']}")
+        print(
+            f"Case {case['case_id']}/{len(cases)}: "
+            f"K={case['K']}, sigma={case['sigma']}, T={case['T']}"
+        )
         for scheme_name, scheme_fn in SCHEMES.items():
             t_scheme = time.time()
             rows = compute_case_scheme_rows(case, scheme_name, scheme_fn)
@@ -187,8 +200,11 @@ def main():
 
     # Verify GCRR-GC converges to BS at largest n for each case (sanity check)
     for case_id in df["case_id"].unique():
-        gc_largest = df[(df["case_id"] == case_id) & (df["scheme"] == "gcrr_gc")] \
-                        .sort_values("n_eff").iloc[-1]
+        gc_largest = (
+            df[(df["case_id"] == case_id) & (df["scheme"] == "gcrr_gc")]
+            .sort_values("n_eff")
+            .iloc[-1]
+        )
         assert abs(gc_largest["error"]) < 0.01, (
             f"GCRR-GC at large n in case {case_id} too far from BS: "
             f"error={gc_largest['error']:.6f}"

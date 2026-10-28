@@ -11,6 +11,7 @@ Notation follows Appendix A.3:
     R = r T,  s = sigma sqrt(T),  x = log(K / S_0),  b = R - x,
     E = x^2 / (2 s^2) + s^2 / 6.
 """
+
 from __future__ import annotations
 
 import numpy as np
@@ -18,9 +19,10 @@ from scipy.stats import norm
 
 from .black_scholes import d1_d2
 
+
 def _appendix_a_quantities(S, K, T, r, sigma):
     """Return (R, s, x, b, E) as defined in Appendix A.3."""
-    
+
     R = r * T
     s = sigma * np.sqrt(T)
     x = np.log(K / S)
@@ -29,6 +31,7 @@ def _appendix_a_quantities(S, K, T, r, sigma):
 
     return R, s, x, b, E
 
+
 def rho_B(S, K, T, r, sigma) -> float:
     """Appendix A.3:  rho_B = (1/s) [ (b^2 - x^2)/2 - s^4/24 - (b - s^2/2) E ]."""
     R, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
@@ -36,12 +39,14 @@ def rho_B(S, K, T, r, sigma) -> float:
     # Compute and return rho_B
     return ((b**2 - x**2) / 2 - s**4 / 24 - (b - s**2 / 2) * E) / s
 
+
 def rho_S(S, K, T, r, sigma) -> float:
     """Appendix A.3:  rho_S = (1/s) [ (x^2 - b^2)/2 + s^4/24 - (b + s^2/2) E ]."""
     R, s, x, b, E = _appendix_a_quantities(S, K, T, r, sigma)
 
     # Compute and return rho_S
     return ((x**2 - b**2) / 2 + s**4 / 24 - (b + s**2 / 2) * E) / s
+
 
 def A_eta(S, K, T, r, sigma, eta: int) -> float:
     """Theorem 3.2, eq. (8):
@@ -60,13 +65,17 @@ def A_eta(S, K, T, r, sigma, eta: int) -> float:
     cubic_correction = (d1**3 - d2**3) / 4
     phase_correction = (2 * eta - 1) * (d1 - d2) / 4
 
-    return S * norm.pdf(d1) * (numeraire_correction + cubic_correction + phase_correction)
+    return (
+        S * norm.pdf(d1) * (numeraire_correction + cubic_correction + phase_correction)
+    )
+
 
 def phase_gap(S, K, T, r, sigma) -> float:
     """Corollary 3.3, eq. (9):  A_1 - A_0 = (1/2) S phi(d1) sigma sqrt(T)."""
     d1, _ = d1_d2(S, K, T, r, sigma)
 
     return 0.5 * S * norm.pdf(d1) * sigma * np.sqrt(T)
+
 
 def digital_strict_even_coef(S, K, T, r, sigma) -> float:
     """Section 4 / Appendix C.3: n^{-1/2} coefficient of the even-phase
@@ -76,6 +85,7 @@ def digital_strict_even_coef(S, K, T, r, sigma) -> float:
     _, d2 = d1_d2(S, K, T, r, sigma)
 
     return -np.exp(-r * T) * norm.pdf(d2)
+
 
 def digital_hn_coef(S, K, T, r, sigma, eta: int) -> float:
     """Appendix C.3: 1/n coefficient of the half-node digital error,
@@ -88,7 +98,6 @@ def digital_hn_coef(S, K, T, r, sigma, eta: int) -> float:
 
     _, d2 = d1_d2(S, K, T, r, sigma)
     rho_b = rho_B(S, K, T, r, sigma)
-
 
     cubic_correction = d2**3 / 4
     phase_correction = ((2 * eta - 1) * d2) / 4

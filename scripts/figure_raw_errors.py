@@ -23,6 +23,7 @@ Test case: European call.
     S = 100, T = 0.5, r = 0.06, sigma = 0.20.
     (Primary non-ATM cases per Section 5.1.)
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -50,9 +51,9 @@ N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 # In this figure: three schemes, ordered so GCRR-GC is drawn last (foreground)
 SCHEMES = [
-    ("crr",        schemes.crr),
+    ("crr", schemes.crr),
     ("gcrr_fixed", schemes.gcrr_fixed),
-    ("gcrr_gc",    schemes.gcrr_gc),
+    ("gcrr_gc", schemes.gcrr_gc),
 ]
 
 
@@ -106,9 +107,14 @@ def make_figure_color(K: float, moneyness_tag: str, results: dict, out_dir: Path
     sizes = {"crr": 20, "gcrr_fixed": 10, "gcrr_gc": 3}
     for key, _ in SCHEMES:
         ax.scatter(
-            N_VALUES, results[key],
-            color=SCHEME_COLORS[key], marker="o", s=sizes[key],
-            alpha=0.85, label=SCHEME_LABELS[key], edgecolors="none",
+            N_VALUES,
+            results[key],
+            color=SCHEME_COLORS[key],
+            marker="o",
+            s=sizes[key],
+            alpha=0.85,
+            label=SCHEME_LABELS[key],
+            edgecolors="none",
         )
 
     ax.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)

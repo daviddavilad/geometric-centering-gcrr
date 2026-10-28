@@ -1,4 +1,5 @@
 """Tests for digital option pricing."""
+
 import numpy as np
 import pytest
 from scipy.stats import norm
@@ -35,12 +36,12 @@ def test_digital_strict_monotone_in_K():
 
 def test_digital_strict_converges_to_bs_at_sqrt_n_rate():
     """The strict digital converges to e^{-rT} Phi(d_2) at O(1/sqrt(n)).
-    
-    The leading error is the 'central-atom discrepancy' (Section 4): 
+
+    The leading error is the 'central-atom discrepancy' (Section 4):
     the strict digital's even-phase error is O(1/sqrt(n)) rather
     than O(1/n). This slow rate is the motivation for the
     half-node corrected digital, which removes the central-atom term.
-    
+
     Test: error * sqrt(n) should be approximately constant across n.
     """
     bs_ref = bs_digital_strict(S, K, T, r, sigma)
@@ -66,12 +67,12 @@ def test_digital_strict_at_K_equals_S_with_zero_drift():
     """When K = S and r = sigma^2/2 (zero log-drift), the BS digital
     equals exactly e^{-rT}/2. The binomial strict digital approaches
     this at the O(1/sqrt(n)) rate of Section 4.
-    
+
     This is a sanity check on the d2 sign and the discount factor.
     At n = 1000, the 1/sqrt(n) envelope allows error ~ 0.03.
     """
     sigma_test = 0.20
-    r_test = 0.5 * sigma_test ** 2  # zero log-drift: r = sigma^2/2
+    r_test = 0.5 * sigma_test**2  # zero log-drift: r = sigma^2/2
     bs_value = np.exp(-r_test * T) * 0.5  # Phi(0) = 0.5
     params = schemes.gcrr_gc(S, S, T, r_test, sigma_test, 1000)
     price = digital_strict_price(S, S, T, r_test, params)
@@ -84,7 +85,7 @@ def test_digital_strict_at_K_equals_S_with_zero_drift():
 def test_bs_digital_strict_at_K_equals_S_zero_drift():
     """Sanity check on the BS digital: zero log-drift -> exactly e^{-rT}/2."""
     sigma_test = 0.20
-    r_test = 0.5 * sigma_test ** 2
+    r_test = 0.5 * sigma_test**2
     bs_value = bs_digital_strict(S, S, T, r_test, sigma_test)
     expected = np.exp(-r_test * T) * 0.5
     assert abs(bs_value - expected) < 1e-12, (
@@ -120,9 +121,7 @@ def test_half_node_corrected_digital_symmetry_at_p_half():
         N = n // 2  # = (n-1)/2 for odd n
         psi = binom.sf(N, n, 0.5)
         # No correction in odd phase
-        assert abs(psi - 0.5) < 1e-12, (
-            f"Odd-phase symmetry failed at n={n}: Psi={psi}"
-        )
+        assert abs(psi - 0.5) < 1e-12, f"Odd-phase symmetry failed at n={n}: Psi={psi}"
 
 
 def test_half_node_corrected_digital_equals_strict_for_odd_n():

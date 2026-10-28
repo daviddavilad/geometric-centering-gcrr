@@ -4,6 +4,7 @@ These tests are scheme-agnostic: they verify identities of the
 Black-Scholes formula itself, not the convergence of any binomial
 scheme to Black-Scholes (those live in test_schemes.py).
 """
+
 from math import exp, log, sqrt
 
 from scipy.stats import norm
@@ -22,11 +23,11 @@ def test_bs_phi_identity():
     """
     cases = [
         # (S, X, T, r, sigma) — spans ATM/OTM/ITM and the WAND panel extremes
-        (100.0, 100.0, 1.00, 0.05, 0.20),   # ATM
-        (100.0, 105.0, 0.50, 0.06, 0.20),   # OTM, primary non-ATM per Section 5.1
-        (100.0,  95.0, 0.50, 0.06, 0.20),   # ITM, primary non-ATM per Section 5.1
-        ( 40.0,  35.0, 0.25, 0.06, 0.20),   # WAND case 1
-        ( 40.0,  45.0, 0.50, 0.06, 0.40),   # WAND case 8
+        (100.0, 100.0, 1.00, 0.05, 0.20),  # ATM
+        (100.0, 105.0, 0.50, 0.06, 0.20),  # OTM, primary non-ATM per Section 5.1
+        (100.0, 95.0, 0.50, 0.06, 0.20),  # ITM, primary non-ATM per Section 5.1
+        (40.0, 35.0, 0.25, 0.06, 0.20),  # WAND case 1
+        (40.0, 45.0, 0.50, 0.06, 0.40),  # WAND case 8
     ]
 
     for S, X, T, r, sigma in cases:

@@ -1,4 +1,5 @@
 """Tests for phase-separated error infrastructure."""
+
 import numpy as np
 import pytest
 
@@ -33,9 +34,7 @@ def test_scaled_error_is_n_times_error():
     np.testing.assert_allclose(
         out.scaled_err_even, out.n_even * out.err_even, rtol=1e-12
     )
-    np.testing.assert_allclose(
-        out.scaled_err_odd, out.n_odd * out.err_odd, rtol=1e-12
-    )
+    np.testing.assert_allclose(out.scaled_err_odd, out.n_odd * out.err_odd, rtol=1e-12)
 
 
 def test_gcrr_gc_scaled_error_stabilizes_phase_wise():
@@ -76,10 +75,10 @@ def test_tian_1999_has_step_discontinuities_otm():
     """Tian (1999) strike-aligned scheme has discontinuities in n where the
     nearest-integer j_0 = round(eta) jumps. The scaled-error sequence is
     therefore piecewise-smooth but not continuous in n.
-    
+
     GCRR-GC avoids this because its lambda formula contains no integer
     rounding -- lambda_n = (kappa_n + sqrt(kappa_n^2 + 4))/2 is continuous in n.
-    
+
     Test: compute successive scaled-error differences. Tian's series
     should have at least a few large jumps in [50, 500]; GCRR-GC's
     should not.
@@ -87,7 +86,9 @@ def test_tian_1999_has_step_discontinuities_otm():
     K_otm = 105.0  # OTM, where Tian's j_0 transitions are visible
     n_values = np.arange(50, 501)
 
-    out_tian = phase_separated_errors(S, K_otm, T, r, sigma, schemes.tian_1999, n_values)
+    out_tian = phase_separated_errors(
+        S, K_otm, T, r, sigma, schemes.tian_1999, n_values
+    )
     out_gc = phase_separated_errors(S, K_otm, T, r, sigma, schemes.gcrr_gc, n_values)
 
     # Successive differences in scaled error, within the even-n phase.

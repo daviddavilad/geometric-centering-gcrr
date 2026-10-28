@@ -1,4 +1,5 @@
 """Correctness gates for the scheme parameterizations."""
+
 import numpy as np
 import pytest
 
@@ -36,7 +37,7 @@ def test_gcrr_xpc_central_node_on_strike():
     n = 200
     p = schemes.gcrr_xpc(S, K, T, r, sigma, n)
     half = n // 2
-    central_node = S * (p.u ** half) * (p.d ** half)
+    central_node = S * (p.u**half) * (p.d**half)
     assert central_node == pytest.approx(K, rel=1e-10)
 
 
@@ -45,7 +46,7 @@ def test_gcrr_gc_strike_alignment_even():
     n = 200
     p = schemes.gcrr_gc(S, K, T, r, sigma, n)
     N = n // 2
-    central_node = S * (p.u ** N) * (p.d ** (n - N))
+    central_node = S * (p.u**N) * (p.d ** (n - N))
     assert central_node == pytest.approx(K, rel=1e-10)
 
 
@@ -54,7 +55,7 @@ def test_gcrr_gc_geometric_center_odd():
     n = 201
     p = schemes.gcrr_gc(S, K, T, r, sigma, n)
     N = n // 2  # = 100
-    S_lower = S * (p.u ** N) * (p.d ** (n - N))
+    S_lower = S * (p.u**N) * (p.d ** (n - N))
     S_upper = S * (p.u ** (N + 1)) * (p.d ** (n - N - 1))
     assert S_lower * S_upper == pytest.approx(K**2, rel=1e-10)
 
@@ -93,10 +94,12 @@ def test_tian_1999_terminal_node_on_strike():
     p = schemes.tian_1999(S, K, T, r, sigma, n)
     # Find the j closest to the ideal up-count
     j = np.arange(n + 1)
-    terminal_nodes = S * (p.u ** j) * (p.d ** (n - j))
+    terminal_nodes = S * (p.u**j) * (p.d ** (n - j))
     # At least one terminal node should match the strike to high precision
     min_distance = np.min(np.abs(terminal_nodes - K) / K)
-    assert min_distance < 1e-10, f"No terminal node hits the strike (min rel dist = {min_distance:.2e})"
+    assert min_distance < 1e-10, (
+        f"No terminal node hits the strike (min rel dist = {min_distance:.2e})"
+    )
 
 
 def test_tian_1999_converges_to_bs():

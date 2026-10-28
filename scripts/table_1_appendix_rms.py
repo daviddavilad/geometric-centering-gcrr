@@ -23,6 +23,7 @@ Outputs (in tables/):
     table_1_appendix_rms.md
     table_1_appendix_rms.xlsx
 """
+
 from pathlib import Path
 
 import numpy as np
@@ -32,9 +33,9 @@ import pandas as pd
 SELECTED_N = [50, 100, 500, 1000, 5000]
 SCHEMES_ORDER = ["crr", "gcrr_gc", "tian_1999", "joshi_2009"]
 SCHEME_DISPLAY = {
-    "crr":        "CRR",
-    "gcrr_gc":    "GCRR-GC",
-    "tian_1999":  "Tian (1999)",
+    "crr": "CRR",
+    "gcrr_gc": "GCRR-GC",
+    "tian_1999": "Tian (1999)",
     "joshi_2009": "Joshi (2009)",
 }
 
@@ -57,10 +58,12 @@ def compute_rms_row(df, scheme, target_n):
         return None
     if len(subset) != 8:
         # Sanity: should be 8 cases per (scheme, n_eff)
-        print(f"  WARNING: {scheme} at n_eff={lookup_n}: found {len(subset)} rows, expected 8")
+        print(
+            f"  WARNING: {scheme} at n_eff={lookup_n}: found {len(subset)} rows, expected 8"
+        )
 
     errors = subset["error"].values
-    rms = float(np.sqrt(np.mean(errors ** 2)))
+    rms = float(np.sqrt(np.mean(errors**2)))
     return rms
 
 
@@ -107,8 +110,12 @@ def _write_markdown(df, path):
     lines = []
     lines.append("# Appendix Table: RMS Pricing Errors across the WAND Panel")
     lines.append("")
-    lines.append("Approximation RMS error for European calls, averaged over the 8 WAND-panel parameter combinations:")
-    lines.append("$K \\in \\{35, 45\\}$, $\\sigma \\in \\{0.20, 0.40\\}$, $T \\in \\{0.25, 0.50\\}$")
+    lines.append(
+        "Approximation RMS error for European calls, averaged over the 8 WAND-panel parameter combinations:"
+    )
+    lines.append(
+        "$K \\in \\{35, 45\\}$, $\\sigma \\in \\{0.20, 0.40\\}$, $T \\in \\{0.25, 0.50\\}$"
+    )
     lines.append("(with $S_0 = 40$, $r = 0.06$).")
     lines.append("")
 
@@ -124,7 +131,9 @@ def _write_markdown(df, path):
         lines.append("| " + " | ".join(cells) + " |")
 
     lines.append("")
-    lines.append("*Note: Joshi (2009) values are computed from Joshi prices at the adjacent odd n (n + 1) since the construction requires odd n.*")
+    lines.append(
+        "*Note: Joshi (2009) values are computed from Joshi prices at the adjacent odd n (n + 1) since the construction requires odd n.*"
+    )
     lines.append("")
 
     path.write_text("\n".join(lines))

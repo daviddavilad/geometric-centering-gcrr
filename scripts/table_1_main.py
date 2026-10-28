@@ -1,7 +1,7 @@
 """Generate main-text Table 1: convergence for K = 105 and K = 95.
 
 Table 1 reports prices and signed errors across schemes. This script
-produces a Chung-Shih (2007) Table 2-style two-panel table: 
+produces a Chung-Shih (2007) Table 2-style two-panel table:
 
     Upper panel: K = 105 (OTM), the primary non-ATM case in Section 5.1
     Lower panel: K =  95 (ITM), the symmetric-moneyness robustness case
@@ -25,6 +25,7 @@ Outputs (in tables/):
     table_1_main.md
     table_1_main.xlsx
 """
+
 from pathlib import Path
 
 import numpy as np
@@ -43,16 +44,16 @@ SIGMA = 0.20
 
 # --- Two-panel structure ---
 K_UPPER = 105.0  # OTM primary
-K_LOWER = 95.0   # ITM symmetric-moneyness robustness
+K_LOWER = 95.0  # ITM symmetric-moneyness robustness
 
 # --- Benchmark n values (WAND 2002 / Chung-Shih 2007) ---
 SELECTED_N = [50, 100, 500, 1000, 5000]
 
 # --- Scheme registry ---
 SCHEMES = {
-    "crr":        (schemes.crr,        "CRR"),
-    "gcrr_gc":    (schemes.gcrr_gc,    "GCRR-GC"),
-    "tian_1999":  (schemes.tian_1999,  "Tian (1999)"),
+    "crr": (schemes.crr, "CRR"),
+    "gcrr_gc": (schemes.gcrr_gc, "GCRR-GC"),
+    "tian_1999": (schemes.tian_1999, "Tian (1999)"),
     "joshi_2009": (schemes.joshi_2009, "Joshi (2009)"),
 }
 
@@ -147,7 +148,9 @@ def _write_markdown(df, path):
     lines = []
     lines.append("# Table 1: Convergence of Binomial Schemes at Primary Non-ATM Cases")
     lines.append("")
-    lines.append(f"Parameters: $S_0 = {S:g}$, $T = {T}$, $r = {R}$, $\\sigma = {SIGMA}$.")
+    lines.append(
+        f"Parameters: $S_0 = {S:g}$, $T = {T}$, $r = {R}$, $\\sigma = {SIGMA}$."
+    )
     lines.append("")
 
     for panel_name in df["panel"].unique():
@@ -176,7 +179,9 @@ def _write_markdown(df, path):
 
         lines.append("")
 
-    lines.append("*Note: Joshi (2009) prices are reported at the adjacent odd n (n + 1) since the construction requires odd n.*")
+    lines.append(
+        "*Note: Joshi (2009) prices are reported at the adjacent odd n (n + 1) since the construction requires odd n.*"
+    )
     lines.append("")
 
     path.write_text("\n".join(lines))
@@ -195,7 +200,9 @@ def main():
 
     write_outputs(df, OUTPUT_DIR)
 
-    print(f"\nGenerated Table 1 (main-text): {len(df)} rows (2 panels of {len(SELECTED_N) + 1} rows each).")
+    print(
+        f"\nGenerated Table 1 (main-text): {len(df)} rows (2 panels of {len(SELECTED_N) + 1} rows each)."
+    )
 
 
 if __name__ == "__main__":

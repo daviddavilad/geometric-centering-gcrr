@@ -18,6 +18,7 @@ Generates:
 Set WRITE_COLOR = True to also generate legacy color version in
 figures/ (used by talks/slides).
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -42,10 +43,10 @@ S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
 N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
-    ("gcrr_gc",    schemes.gcrr_gc),
+    ("gcrr_gc", schemes.gcrr_gc),
     ("joshi_2009", schemes.joshi_2009),
-    ("crr",        schemes.crr),
-    ("tian_1999",  schemes.tian_1999),
+    ("crr", schemes.crr),
+    ("tian_1999", schemes.tian_1999),
 ]
 
 
@@ -67,20 +68,30 @@ def make_figure_paper(results: dict, out_dir: Path):
 
     # Top panel: Delta_n
     from gcrr.plotting import SCHEME_STYLES_PAPER, SCHEME_LABELS
+
     for key, _ in SCHEMES:
         out = results[key]
         if key == "joshi_2009":
             ax_top.plot(
-                N_VALUES, out["Delta"],
-                marker="x", linestyle="none", color="#7F7F7F",
-                markersize=2.0, markeredgewidth=0.2,
+                N_VALUES,
+                out["Delta"],
+                marker="x",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=2.0,
+                markeredgewidth=0.2,
                 label=SCHEME_LABELS[key],
             )
         elif key == "tian_1999":
             ax_top.plot(
-                N_VALUES, out["Delta"],
-                marker="v", linestyle="none", color="#7F7F7F",
-                markersize=1.5, markeredgewidth=0.2, fillstyle="none",
+                N_VALUES,
+                out["Delta"],
+                marker="v",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=1.5,
+                markeredgewidth=0.2,
+                fillstyle="none",
                 label=SCHEME_LABELS[key],
             )
         else:
@@ -88,7 +99,9 @@ def make_figure_paper(results: dict, out_dir: Path):
 
     ax_top.axhline(0, color="black", linewidth=0.4, alpha=0.6, zorder=0)
     ax_top.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
-    ax_top.axhline(-1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
+    ax_top.axhline(
+        -1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--"
+    )
     ax_top.set_ylabel(r"$\Delta_n = 1 - 2\theta_n$")
     ax_top.set_ylim(-1.15, 1.15)
 
@@ -98,16 +111,25 @@ def make_figure_paper(results: dict, out_dir: Path):
         threshold = out["m"] - N_arr
         if key == "joshi_2009":
             ax_bot.plot(
-                N_VALUES, threshold,
-                marker="x", linestyle="none", color="#7F7F7F",
-                markersize=2.0, markeredgewidth=0.2,
+                N_VALUES,
+                threshold,
+                marker="x",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=2.0,
+                markeredgewidth=0.2,
                 label="_nolegend_",
             )
         elif key == "tian_1999":
             ax_bot.plot(
-                N_VALUES, threshold,
-                marker="v", linestyle="none", color="#7F7F7F",
-                markersize=1.5, markeredgewidth=0.2, fillstyle="none",
+                N_VALUES,
+                threshold,
+                marker="v",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=1.5,
+                markeredgewidth=0.2,
+                fillstyle="none",
                 label="_nolegend_",
             )
         else:
@@ -118,7 +140,8 @@ def make_figure_paper(results: dict, out_dir: Path):
     ax_bot.set_ylabel(r"$m_n - N$")
 
     ax_top.legend(
-        loc="center left", bbox_to_anchor=(1.02, 0.5),
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
         frameon=True,
     )
 
@@ -147,16 +170,25 @@ def make_figure_color(results: dict, out_dir: Path):
         out = results[key]
         if key == "joshi_2009":
             ax_top.plot(
-                N_VALUES, out["Delta"],
-                marker="x", linestyle="none", color="#7F7F7F",
-                markersize=2.0, markeredgewidth=0.2,
+                N_VALUES,
+                out["Delta"],
+                marker="x",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=2.0,
+                markeredgewidth=0.2,
                 label=SCHEME_LABELS[key],
             )
         elif key == "tian_1999":
             ax_top.plot(
-                N_VALUES, out["Delta"],
-                marker="v", linestyle="none", color="#7F7F7F",
-                markersize=1.5, markeredgewidth=0.2, fillstyle="none",
+                N_VALUES,
+                out["Delta"],
+                marker="v",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=1.5,
+                markeredgewidth=0.2,
+                fillstyle="none",
                 label=SCHEME_LABELS[key],
             )
         else:
@@ -164,7 +196,9 @@ def make_figure_color(results: dict, out_dir: Path):
 
     ax_top.axhline(0, color="black", linewidth=0.4, alpha=0.5, zorder=0)
     ax_top.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
-    ax_top.axhline(-1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
+    ax_top.axhline(
+        -1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--"
+    )
     ax_top.set_ylabel(r"$\Delta_n = 1 - 2\theta_n$")
     ax_top.set_ylim(-1.15, 1.15)
 
@@ -172,28 +206,41 @@ def make_figure_color(results: dict, out_dir: Path):
         out = results[key]
         if key == "joshi_2009":
             ax_bot.plot(
-                N_VALUES, out["m"] - N_arr,
-                marker="x", linestyle="none", color="#7F7F7F",
-                markersize=2.0, markeredgewidth=0.2,
+                N_VALUES,
+                out["m"] - N_arr,
+                marker="x",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=2.0,
+                markeredgewidth=0.2,
                 label="_nolegend_",
             )
         elif key == "tian_1999":
             ax_bot.plot(
-                N_VALUES, out["m"] - N_arr,
-                marker="v", linestyle="none", color="#7F7F7F",
-                markersize=1.5, markeredgewidth=0.2, fillstyle="none",
+                N_VALUES,
+                out["m"] - N_arr,
+                marker="v",
+                linestyle="none",
+                color="#7F7F7F",
+                markersize=1.5,
+                markeredgewidth=0.2,
+                fillstyle="none",
                 label="_nolegend_",
             )
         else:
-            plot_paper_series(ax_bot, N_VALUES, out["m"] - N_arr, key, label="_nolegend_")
+            plot_paper_series(
+                ax_bot, N_VALUES, out["m"] - N_arr, key, label="_nolegend_"
+            )
 
     ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
     ax_bot.set_xlabel(r"$n$ (periods)")
     ax_bot.set_ylabel(r"$m_n - N$")
 
     ax_top.legend(
-        loc="center left", bbox_to_anchor=(1.02, 0.5),
-        frameon=True, framealpha=0.9,
+        loc="center left",
+        bbox_to_anchor=(1.02, 0.5),
+        frameon=True,
+        framealpha=0.9,
     )
 
     fig.suptitle(

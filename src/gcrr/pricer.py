@@ -5,11 +5,13 @@ consumes it identically. This is the same architecture as the public
 option-pricing repo, generalized to carry the stretch parameter and
 strike-location bookkeeping that the GCRR family needs.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
 from scipy.stats import binom
 import numpy as np
+
 
 @dataclass(frozen=True)
 class TreeParameters:
@@ -24,6 +26,7 @@ class TreeParameters:
     R    : one-period gross risk-free return e^{r*dt}
     lam  : stretch parameter (lambda); 1.0 recovers CRR. None if not applicable.
     """
+
     u: float
     d: float
     p: float
@@ -48,7 +51,16 @@ class TreeParameters:
         if self.n <= 0:
             raise ValueError(f"Require n > 0, got n={self.n}")
 
-def binomial_price(S: float, K: float, T: float, r: float, params: TreeParameters, option_type: str = "call", exercise: str = "european") -> float:
+
+def binomial_price(
+    S: float,
+    K: float,
+    T: float,
+    r: float,
+    params: TreeParameters,
+    option_type: str = "call",
+    exercise: str = "european",
+) -> float:
     """Price an option by backward induction on the given tree.
 
     Vectorized over the j-index at each time step. O(n^2) time, O(n) space.
@@ -66,7 +78,7 @@ def binomial_price(S: float, K: float, T: float, r: float, params: TreeParameter
 
     # Terminal stock prices: S * u^j * d^(n-j), j = 0..n
     j = np.arange(n + 1)
-    ST = S * (u ** j) * (d ** (n - j))
+    ST = S * (u**j) * (d ** (n - j))
 
     # Terminal payoff
     if option_type == "call":
@@ -82,7 +94,7 @@ def binomial_price(S: float, K: float, T: float, r: float, params: TreeParameter
         V = disc * (p * V[1 : step + 2] + (1.0 - p) * V[0 : step + 1])
         if is_american:
             jj = np.arange(step + 1)
-            S_nodes = S * (u ** jj) * (d ** (step - jj))
+            S_nodes = S * (u**jj) * (d ** (step - jj))
             if option_type == "call":
                 intrinsic = np.maximum(S_nodes - K, 0.0)
             else:
@@ -91,7 +103,10 @@ def binomial_price(S: float, K: float, T: float, r: float, params: TreeParameter
 
     return float(V[0])
 
-def two_tail_call_price(S, K, T, r, params: TreeParameters, m: int | None = None) -> float:
+
+def two_tail_call_price(
+    S, K, T, r, params: TreeParameters, m: int | None = None
+) -> float:
     """European call via the exact two-numeraire tail representation
     (Proposition 3.1):  C = S Psi(p^S) - K e^{-rT} Psi(p^B),
     Psi(p) = P(Bin(n, p) >= m),  p^S = p^B u / R.

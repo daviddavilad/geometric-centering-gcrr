@@ -15,6 +15,7 @@ from gcrr.extrapolation import richardson_same_phase
 
 S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20
 
+
 # Test high-precision versus double-precision call pricing
 @pytest.mark.parametrize("n", [51, 500])
 def test_mp_call_matches_double(n):
@@ -27,6 +28,7 @@ def test_mp_call_matches_double(n):
 
         assert abs(float(C_mp) - C_double) < 1e-10
 
+
 # Test high-precision versus double-precision Black-Scholes
 def test_bs_call_mp_matches_double():
     C_double = bs_call(S, K, T, r, sigma)
@@ -35,6 +37,7 @@ def test_bs_call_mp_matches_double():
         C_mp = bs_call_mp(S, K, T, r, sigma)
 
         assert abs(float(C_mp) - C_double) < 1e-12
+
 
 # Test high-precision same-phase Richardson convergence
 def test_same_phase_rate_is_second_order_high_precision():
@@ -60,6 +63,5 @@ def test_same_phase_rate_is_second_order_high_precision():
         ratio = abs(error_1000) / abs(error_2000)
 
         assert mp.mpf("3.99") < ratio < mp.mpf("4.03"), (
-            f"Expected ratio near 4.007; "
-            f"observed {mp.nstr(ratio, 12)}"
+            f"Expected ratio near 4.007; observed {mp.nstr(ratio, 12)}"
         )

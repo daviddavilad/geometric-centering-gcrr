@@ -12,6 +12,7 @@ and differs only in how lambda is chosen:
     - gcrr_xpc:      lambda chosen so a terminal node sits ON the strike (even n)
     - gcrr_gc:       lambda chosen by the parity-free geometric-center condition
 """
+
 from __future__ import annotations
 
 import numpy as np

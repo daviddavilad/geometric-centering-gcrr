@@ -62,19 +62,18 @@ COLUMNS = (
     "adjacent_pa",
 )
 
+
 def build_table_rows() -> list[dict]:
     """Compute five signed extrapolation errors per panel and n."""
     rows = []
     assert all(n % 2 == 0 for n in N_GRID), f"N_GRID must contain only even n: {N_GRID}"
 
     for panel, K in PANELS:
-
         # Reference value and theoretical phase gap.
         C_BS = bs_call_mp(S, K, T, RATE, SIGMA)
         gap = mp.mpf(phase_gap(S, K, T, RATE, SIGMA))
 
         for n in N_GRID:
-
             # Compute each required tree price only once.
             C_n = gcrr_gc_call_mp(S, K, T, RATE, SIGMA, n)
             C_n1 = gcrr_gc_call_mp(S, K, T, RATE, SIGMA, n + 1)
@@ -100,18 +99,21 @@ def build_table_rows() -> list[dict]:
             adjacent_pa = C_adj_pa - C_BS
 
             # Convert to float only for the final output.
-            rows.append({
-                "panel": panel,
-                "K": int(K),
-                "n": n,
-                "raw_even": float(raw_even),
-                "raw_odd": float(raw_odd),
-                "same_phase": float(same_phase),
-                "adjacent": float(adjacent),
-                "adjacent_pa": float(adjacent_pa),
-            })
+            rows.append(
+                {
+                    "panel": panel,
+                    "K": int(K),
+                    "n": n,
+                    "raw_even": float(raw_even),
+                    "raw_odd": float(raw_odd),
+                    "same_phase": float(same_phase),
+                    "adjacent": float(adjacent),
+                    "adjacent_pa": float(adjacent_pa),
+                }
+            )
 
     return rows
+
 
 def write_csv(rows: list[dict], path: Path):
     """Write numerical results as CSV with seven significant digits."""
@@ -119,11 +121,13 @@ def write_csv(rows: list[dict], path: Path):
     table.to_csv(path, index=False, float_format="%.6e")
     print(f"Saved {path}")
 
+
 def write_xlsx(rows: list[dict], path: Path):
     """Write numerical results as an Excel workbook."""
     table = pd.DataFrame(rows, columns=COLUMNS)
     table.to_excel(path, index=False, float_format="%.6e")
     print(f"Saved {path}")
+
 
 def write_markdown(rows: list[dict], path: Path):
     """Write a readable table with separate OTM and ITM panels."""
@@ -146,8 +150,7 @@ def write_markdown(rows: list[dict], path: Path):
     sections = [caption]
 
     for panel, K in PANELS:
-
-        description = ("Out-of-the-Money" if K > S else "In-the-Money")
+        description = "Out-of-the-Money" if K > S else "In-the-Money"
 
         sections.append(f"### Panel {panel}: {description} (K={K:.0f})\n\n")
 
@@ -175,6 +178,7 @@ def write_markdown(rows: list[dict], path: Path):
     path.write_text("".join(sections), encoding="utf-8")
     print(f"Saved {path}")
 
+
 def main():
     rows = build_table_rows()
 
@@ -187,8 +191,13 @@ def main():
     print(f"\nGenerated Table 3 with {len(rows)} rows.")
 
     for panel, K in PANELS:
-        last = next(row for row in rows if row["panel"] == panel and row["n"] == N_GRID[-1])
-        print(f"Panel {panel} (K={K:.0f}): same-phase error at n={N_GRID[-1]} = {last['same_phase']:+.4e}")
+        last = next(
+            row for row in rows if row["panel"] == panel and row["n"] == N_GRID[-1]
+        )
+        print(
+            f"Panel {panel} (K={K:.0f}): same-phase error at n={N_GRID[-1]} = {last['same_phase']:+.4e}"
+        )
+
 
 if __name__ == "__main__":
     main()

@@ -39,7 +39,7 @@ def exact_upper_tail(n, eta, a, rho=0.0):
     if (n - eta) % 2 != 0:
         raise ValueError(f"n={n} has wrong parity for eta={eta}")
     N = (n - eta) // 2
-    p = 0.5 + a / (2.0 * np.sqrt(n)) + rho / (2.0 * n ** 1.5)
+    p = 0.5 + a / (2.0 * np.sqrt(n)) + rho / (2.0 * n**1.5)
     if not (0.0 < p < 1.0):
         raise ValueError(f"p_n = {p} out of (0,1) at n={n}, a={a}")
     # P(B_n >= N+1) = 1 - F(N) where F is the binomial CDF.
@@ -68,7 +68,7 @@ def empirical_1_over_n_coefficient(a, eta, rho=0.0, n_values=None):
         n_list.append(n)
         residuals.append(residual)
 
-    A = np.array([[1.0 / n, 1.0 / n ** 1.5, 1.0 / n ** 2, 1.0 / n ** 2.5] for n in n_list])
+    A = np.array([[1.0 / n, 1.0 / n**1.5, 1.0 / n**2, 1.0 / n**2.5] for n in n_list])
     b = np.array(residuals)
     coef, *_ = np.linalg.lstsq(A, b, rcond=None)
     return coef[0]
@@ -76,7 +76,7 @@ def empirical_1_over_n_coefficient(a, eta, rho=0.0, n_values=None):
 
 def eq5_prediction(a, eta, rho=0.0):
     """C = rho + a^3/4 + (2*eta - 1) * a/4"""
-    return rho + a ** 3 / 4.0 + (2 * eta - 1) * a / 4.0
+    return rho + a**3 / 4.0 + (2 * eta - 1) * a / 4.0
 
 
 def main():
@@ -89,10 +89,7 @@ def main():
     print(" and compare to the eq. (5) prediction.")
     print()
 
-    header = (
-        f"{'a':>6} {'eta':>4} | {'empirical C':>14} "
-        f"| {'eq. (5)':>16} {'err':>10}"
-    )
+    header = f"{'a':>6} {'eta':>4} | {'empirical C':>14} | {'eq. (5)':>16} {'err':>10}"
     print(header)
     print("-" * len(header))
 

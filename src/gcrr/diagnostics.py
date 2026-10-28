@@ -15,6 +15,7 @@ log-lattice. They depend only on (S, K, n, u, d), not on p, r, or sigma.
 For GCRR-GC (Proposition 2.1), gamma_n = n/2 in both phases, so Delta_n = 1
 for even n, Delta_n = 0 for odd n, and m_n = N + 1 for every n.
 """
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -28,11 +29,12 @@ from .pricer import TreeParameters
 @dataclass(frozen=True)
 class StrikeLocation:
     """Strike-location coordinates for one tree."""
-    gamma: float   # continuous strike index
-    J: int         # weak upper index ceil(gamma_n)
-    m: int         # strict exercise threshold m_n, eq. (1)
-    theta: float   # J - gamma, in [0, 1)
-    Delta: float   # 1 - 2*theta, in (-1, 1]
+
+    gamma: float  # continuous strike index
+    J: int  # weak upper index ceil(gamma_n)
+    m: int  # strict exercise threshold m_n, eq. (1)
+    theta: float  # J - gamma, in [0, 1)
+    Delta: float  # 1 - 2*theta, in (-1, 1]
 
 
 def strike_location(S: float, K: float, params: TreeParameters) -> StrikeLocation:
@@ -92,9 +94,7 @@ def strike_location(S: float, K: float, params: TreeParameters) -> StrikeLocatio
     else:
         m = J
 
-    return StrikeLocation(
-        gamma=gamma, J=J, m=m, theta=theta, Delta=Delta
-    )
+    return StrikeLocation(gamma=gamma, J=J, m=m, theta=theta, Delta=Delta)
 
 
 def strike_location_sweep(

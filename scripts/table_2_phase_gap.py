@@ -17,6 +17,7 @@ Outputs (tables/):
     table_2_phase_gap.csv, .xlsx   full precision
     table_2_phase_gap.md           rounded, with caption
 """
+
 from itertools import product
 from pathlib import Path
 
@@ -40,6 +41,7 @@ FIT_N_BASES = (1000, 2000, 5000, 10000, 20000, 50000, 100000)
 
 OUTPUT_DIR = Path(__file__).parent.parent / "tables"
 
+
 def fit_phase_constant(S, K, T, r, sigma, eta: int) -> float:
     """Fitted A_eta: least-squares fit of n (C_n - C_BS) = A + B n^{-1/2} + C n^{-1}
     over n = base + eta, base in FIT_N_BASES, with GCRR-GC prices from the
@@ -60,7 +62,8 @@ def fit_phase_constant(S, K, T, r, sigma, eta: int) -> float:
         scaled_errors.append(n * (C_n - C_BS))
 
     return fit_leading_constant(n_values, scaled_errors)
-    
+
+
 def build_table_rows() -> list[dict]:
     """For each WAND case, compute fitted constants and predicted gap.
 
@@ -70,7 +73,6 @@ def build_table_rows() -> list[dict]:
     rows = []
 
     for K, sigma, T in product(K_VALUES, SIGMA_VALUES, T_VALUES):
-
         # Empirical fitted coefficients
         A0_hat = fit_phase_constant(S0, K, T, RATE, sigma, 0)
         A1_hat = fit_phase_constant(S0, K, T, RATE, sigma, 1)
@@ -84,22 +86,27 @@ def build_table_rows() -> list[dict]:
         gap_theory = phase_gap(S0, K, T, RATE, sigma)
 
         # Largest discrepancy among the three theoretical comparisons
-        max_abs_resid = max(abs(A0_hat - A0_theory), abs(A1_hat - A1_theory), abs(gap_hat - gap_theory))
+        max_abs_resid = max(
+            abs(A0_hat - A0_theory), abs(A1_hat - A1_theory), abs(gap_hat - gap_theory)
+        )
 
-        rows.append({
-            "K": K,
-            "sigma": sigma,
-            "T": T,
-            "A0_hat": A0_hat,
-            "A0_theory": A0_theory,
-            "A1_hat": A1_hat,
-            "A1_theory": A1_theory,
-            "gap_hat": gap_hat,
-            "gap_theory": gap_theory,
-            "max_abs_resid": max_abs_resid,
-        })
+        rows.append(
+            {
+                "K": K,
+                "sigma": sigma,
+                "T": T,
+                "A0_hat": A0_hat,
+                "A0_theory": A0_theory,
+                "A1_hat": A1_hat,
+                "A1_theory": A1_theory,
+                "gap_hat": gap_hat,
+                "gap_theory": gap_theory,
+                "max_abs_resid": max_abs_resid,
+            }
+        )
 
     return rows
+
 
 def write_csv(rows: list[dict], path: Path):
     """Write table as CSV at full precision."""
@@ -107,11 +114,13 @@ def write_csv(rows: list[dict], path: Path):
     table.to_csv(path, index=False, float_format="%.10g")
     print(f"Saved {path}")
 
+
 def write_xlsx(rows: list[dict], path: Path):
     """Write table as XLSX at full precision (for pasting into Word)."""
     table = pd.DataFrame(rows)
     table.to_excel(path, index=False, float_format="%.10g")
     print(f"Saved {path}")
+
 
 def write_markdown(rows: list[dict], path: Path):
     """Write table as Markdown with caption, rounded for reading."""
@@ -146,6 +155,7 @@ def write_markdown(rows: list[dict], path: Path):
         f.write("\n".join(body_lines) + "\n")
     print(f"Saved {path}")
 
+
 def main():
     rows = build_table_rows()
 
@@ -157,6 +167,7 @@ def main():
     print(f"\nGenerated Table 2 with {len(rows)} cases.")
     max_residual = max(r["max_abs_resid"] for r in rows)
     print(f"Maximum residual: {max_residual:.2e}")
+
 
 if __name__ == "__main__":
     main()

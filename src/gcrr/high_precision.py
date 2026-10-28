@@ -10,9 +10,11 @@ Callers must set mpmath.mp.dps (e.g. 40) BEFORE calling, and keep it set
 for all arithmetic on the results: mpmath numbers keep their digits, but
 operations run at the current global precision.
 """
+
 from __future__ import annotations
 
 import mpmath as mp
+
 
 def bs_call_mp(S, K, T, r, sigma):
     """Black-Scholes call in mpmath: S Phi(d1) - K e^{-rT} Phi(d2)."""
@@ -26,13 +28,14 @@ def bs_call_mp(S, K, T, r, sigma):
 
     return S * mp.ncdf(d1) - K * mp.exp(-r * T) * mp.ncdf(d2)
 
+
 def gcrr_gc_call_mp(S, K, T, r, sigma, n: int):
     """GCRR-GC European call via Proposition 3.1, all in mpmath:
-        kappa = 2 log(K/S) / (sigma sqrt(nT)),  lambda = (kappa + sqrt(kappa^2 + 4)) / 2,
-        h = T/n,  u = exp(lambda sigma sqrt(h)),  d = exp(-sigma sqrt(h) / lambda),
-        p^B = (e^{rh} - d) / (u - d),  p^S = p^B u e^{-rh},  m = N + 1,
-        C = S Psi(p^S) - K e^{-rT} Psi(p^B),
-        Psi(p) = P(Bin(n, p) >= m) = I_p(m, n - m + 1)   (regularized incomplete beta).
+    kappa = 2 log(K/S) / (sigma sqrt(nT)),  lambda = (kappa + sqrt(kappa^2 + 4)) / 2,
+    h = T/n,  u = exp(lambda sigma sqrt(h)),  d = exp(-sigma sqrt(h) / lambda),
+    p^B = (e^{rh} - d) / (u - d),  p^S = p^B u e^{-rh},  m = N + 1,
+    C = S Psi(p^S) - K e^{-rT} Psi(p^B),
+    Psi(p) = P(Bin(n, p) >= m) = I_p(m, n - m + 1)   (regularized incomplete beta).
     """
 
     S, K, T, r, sigma = (mp.mpf(str(v)) for v in (S, K, T, r, sigma))

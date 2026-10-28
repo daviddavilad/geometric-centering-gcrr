@@ -1,4 +1,5 @@
 """Black-Scholes European option prices and the d1, d2 helpers."""
+
 from __future__ import annotations
 
 import numpy as np
