@@ -1,7 +1,7 @@
-"""WAND-style robustness data pipeline for Tables 1 and 2.
+"""WAND-style robustness data pipeline for Table OA.1.
 
 Computes binomial pricing errors and scaled errors across the WAND-style
-non-ATM parameter panel specified in Chen Section 9.4 (revised draft):
+non-ATM parameter panel specified in Section 5.1:
 
     S = 40, r = 0.06, X in {35, 45}, sigma in {0.20, 0.40}, T in {0.25, 0.50}.
 
@@ -11,18 +11,18 @@ panel is directly comparable to the benchmark panels in Widdicks et al.
 X/S in {0.875, 1.125}.
 
 For each (case, scheme) pair, the script computes binomial prices and
-errors over a log-spaced n grid from 200 to 5000, per Chen Section 9.4's
-"200 <= n <= 5000 for asymptotic constants" specification.
+errors over a log-spaced n grid from 50 to 5001, which covers the
+benchmark counts {50, 100, 500, 1000, 5000} and the adjacent odd
+counts used for Joshi (2009).
 
 Output: data/wand_results.csv in long format. One row per
 (case_id, scheme, n_eff). Columns:
     case_id, S, K, T, r, sigma, scheme, n_req, n_eff, eta,
     price, bs_price, error, scaled_error.
 
-Downstream: Tables 1 and 2 will be generated from this CSV. The fitted
-phase-wise constants A_0, A_1, the empirical phase gap, and the
-closed-form prediction (Corollary 7.2) will be computed in a separate
-table-generation script.
+Downstream: scripts/table_1_appendix_rms.py reads this CSV to build
+Table OA.1. The phase constants in Table 2 are computed independently
+by scripts/table_2_phase_gap.py and do not use this file.
 
 Schemes computed:
     CRR (baseline), GCRR-GC (the proposed method), Tian (1999),
@@ -47,7 +47,7 @@ from gcrr.black_scholes import bs_call
 from gcrr.pricer import binomial_price
 
 
-# --- WAND-style parameter panel (Chen Section 9.4) ---
+# --- WAND-style parameter panel (Section 5.1) ---
 WAND_S = 40.0
 WAND_R = 0.06
 WAND_K_VALUES = [35.0, 45.0]
@@ -64,7 +64,7 @@ def _build_n_grid() -> np.ndarray:
     (where WAND-standard selected values live), denser at moderate n,
     sparse at high n.
 
-    Range covers n = 50 to 5001, including Chen §9.4's selected values
+    Range covers n = 50 to 5001, including the benchmark counts
     {50, 100, 500, 1000, 5000} (WAND (2002) and Chung-Shih (2007)
     benchmark points).
 

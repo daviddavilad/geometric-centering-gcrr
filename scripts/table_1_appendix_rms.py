@@ -1,18 +1,15 @@
-"""Generate appendix Table: RMS pricing errors across the WAND panel.
+"""Generate Table OA.1: RMS pricing errors across the WAND panel.
 
-Per Chen Jul 15 email: robustness materials belong in the online 
-appendix. This script produces a Chung-Shih (2007) Table 3-style
-robustness table:
+This script produces a Chung-Shih (2007) Table 3-style robustness table:
 
     RMS errors averaged over the 8 WAND parameter combinations at
-    each selected n, per scheme. European calls only (per Chen §9.4
-    scope decision to defer American puts).
+    each selected n, per scheme. European calls only.
 
-Rows: n ∈ {50, 100, 500, 1000, 5000}, Chen benchmark values.
+Rows: n ∈ {50, 100, 500, 1000, 5000} benchmark values.
 Columns per scheme: RMS error over the 8 WAND cases.
 Schemes: CRR, GCRR-GC, Tian (1999), Joshi (2009).
 
-WAND panel per Chen §9.4:
+WAND panel per Section 5.1:
     S = 40, r = 0.06, K ∈ {35, 45}, sigma ∈ {0.20, 0.40}, T ∈ {0.25, 0.50}.
 
 Joshi handling: Joshi's construction requires odd n. RMS values for

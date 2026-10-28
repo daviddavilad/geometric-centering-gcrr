@@ -78,7 +78,7 @@ def test_tian_1999_has_step_discontinuities_otm():
     therefore piecewise-smooth but not continuous in n.
     
     GCRR-GC avoids this because its lambda formula contains no integer
-    rounding -- lambda(n) = (A_n + sqrt(A_n^2 + 4))/2 is continuous in n.
+    rounding -- lambda_n = (kappa_n + sqrt(kappa_n^2 + 4))/2 is continuous in n.
     
     Test: compute successive scaled-error differences. Tian's series
     should have at least a few large jumps in [50, 500]; GCRR-GC's

@@ -2,7 +2,7 @@ Check 1 (symbolic): third term = -a/12 (1-a^2) = +a/12 (a^2-1)   [PASS]
             printed +a/12 (1-a^2) differs by a*(1 - a**2)/6  (=> printed line is wrong)
 Check 2 (z_n -> -a):  confirmed from the definition           [PASS]
 Check 3 (third term isolated): -> -a/12 (1-a^2), not +        [PASS]
-Check 4 (full Prop B.1 vs exact tail): residual O(n^-3/2)     [PASS]
+Check 4 (full eq. (5) vs exact tail):  residual O(n^-3/2)     [PASS]
             control: typo-propagated coeff fails at O(1/n)    [PASS]
 
 All checks passed: third term is  -a/12 (1-a^2) phi(a).

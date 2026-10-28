@@ -13,18 +13,18 @@ def test_bs_phi_identity():
     """Verify S_0 * phi(d_1) = X * exp(-rT) * phi(d_2) across parameters.
 
     This is a fundamental Black-Scholes identity relating the two
-    Gaussian densities evaluated at d_1 and d_2. Required by Chen §9.6.
+    Gaussian densities evaluated at d_1 and d_2.
 
     The identity follows from d_1 - d_2 = sigma * sqrt(T) and direct
     algebraic manipulation of the log-normal density; it plays a key
     role in the delta/digital relationship and in the phase-gap
-    identity of Corollary 7.2.
+    identity of Corollary 3.3.
     """
     cases = [
         # (S, X, T, r, sigma) — spans ATM/OTM/ITM and the WAND panel extremes
         (100.0, 100.0, 1.00, 0.05, 0.20),   # ATM
-        (100.0, 105.0, 0.50, 0.06, 0.20),   # OTM, primary non-ATM per Chen §9.4
-        (100.0,  95.0, 0.50, 0.06, 0.20),   # ITM, primary non-ATM per Chen §9.4
+        (100.0, 105.0, 0.50, 0.06, 0.20),   # OTM, primary non-ATM per Section 5.1
+        (100.0,  95.0, 0.50, 0.06, 0.20),   # ITM, primary non-ATM per Section 5.1
         ( 40.0,  35.0, 0.25, 0.06, 0.20),   # WAND case 1
         ( 40.0,  45.0, 0.50, 0.06, 0.40),   # WAND case 8
     ]

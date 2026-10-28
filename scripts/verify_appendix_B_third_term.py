@@ -1,14 +1,14 @@
 """
-Verification of the third-term sign in the Proposition B.1 proof (Appendix B).
+Verification of the third-term sign in the eq. (5) proof (Appendix B).
 
 The Uspensky/Edgeworth expansion in the proof contains the term
     T3 = -(1/(12 n)) * z_n * (z_n^2 - 1) * phi(z_n).
-The draft printed its leading value as  +a/12 (1-a^2) phi(a).
+An earlier draft printed its leading value as  +a/12 (1-a^2) phi(a).
 This script confirms the correct value is  -a/12 (1-a^2) phi(a)
 (equivalently +a/12 (a^2-1) phi(a) -- same number, different convention),
-and that Proposition B.1 as stated is correct to O(n^{-3/2}).
+and that eq. (5) as stated is correct to O(n^{-3/2}).
 
-Run:  python verification/verify_appendix_B_third_term.py
+Run:  uv run python scripts/verify_appendix_B_third_term.py
 Deps: sympy (ships mpmath).
 """
 
@@ -31,7 +31,7 @@ def check_symbolic():
 
     truth_1ma2 = -sp.Rational(1, 12) * a * (1 - a**2)   # -a/12 (1-a^2)
     truth_a2m1 = +sp.Rational(1, 12) * a * (a**2 - 1)   # +a/12 (a^2-1)
-    printed = +sp.Rational(1, 12) * a * (1 - a**2)      # what the draft printed
+    printed = +sp.Rational(1, 12) * a * (1 - a**2)      # what an earlier draft printed
 
     assert sp.simplify(coeff - truth_1ma2) == 0, "coeff != -a/12 (1-a^2)"
     assert sp.simplify(truth_1ma2 - truth_a2m1) == 0, "the two legal forms disagree"
@@ -63,8 +63,8 @@ def exact_tail(a, rho, n, eta):
         s += mp.binomial(n, j) * p**j * q**(n - j)
     return s
 
-def prop_B1(a, rho, n, eta):
-    """Proposition B.1 as stated (with the CORRECT n^-1 coefficient)."""
+def eq5_expansion(a, rho, n, eta):
+    """Eq. (5) as stated (with the CORRECT n^-1 coefficient)."""
     n = mp.mpf(n); a = mp.mpf(a); rho = mp.mpf(rho); chi = mp.mpf(1 - eta) / 2
     coeff = rho + (a**3 + (2 * eta - 1) * a) / 4
     return Phi(a) - (2 * chi / mp.sqrt(n)) * phi(a) + (coeff / n) * phi(a)
@@ -98,7 +98,7 @@ def check_third_term_isolated():
 
 
 # ----------------------------------------------------------------------
-# Check 4 -- full Proposition B.1 vs exact binomial tail (+ typo control)
+# Check 4 -- eq. (5) vs exact binomial tail (+ typo control)
 # ----------------------------------------------------------------------
 def check_full_proposition():
     a, rho = 0.7, 0.4
@@ -108,9 +108,9 @@ def check_full_proposition():
         ns = [2 * N + eta for N in ns]
         last = None
         for n in ns:
-            resid = exact_tail(a, rho, n, eta) - prop_B1(a, rho, n, eta)
+            resid = exact_tail(a, rho, n, eta) - eq5_expansion(a, rho, n, eta)
             last = abs(resid) * n          # n * residual -> 0 if coeff exact
-        assert last < 1e-2, f"Prop B.1 residual too large (eta={eta}): {last}"
+        assert last < 1e-2, f"eq. (5) residual too large (eta={eta}): {last}"
 
         # control: typo-propagated coeff (5/12 instead of 1/4) is wrong at O(1/n)
         def prop_typo(a, rho, n, eta):
@@ -120,7 +120,7 @@ def check_full_proposition():
         n = ns[-1]
         resid_typo = abs(exact_tail(a, rho, n, eta) - prop_typo(a, rho, n, eta)) * n
         assert resid_typo > 1e-3, "typo version unexpectedly passed"
-    print("Check 4 (full Prop B.1 vs exact tail): residual O(n^-3/2)     [PASS]")
+    print("Check 4 (full eq. (5) vs exact tail):  residual O(n^-3/2)     [PASS]")
     print("            control: typo-propagated coeff fails at O(1/n)    [PASS]")
 
 

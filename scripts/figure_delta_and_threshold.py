@@ -1,4 +1,4 @@
-r"""Strike-location diagnostics: Delta_n and J_n^+ - N across four schemes.
+r"""Strike-location diagnostics: Delta_n and m_n - N across four schemes.
 
 Two stacked panels showing the geometric structure of the strike's
 position in the terminal log-lattice:
@@ -7,10 +7,10 @@ Top panel: Delta_n = 1 - 2*theta_n, the continuous centered location
 coordinate. Reference lines at Delta = 0 (geometric midpoint) and
 Delta = +/-1 (strike on a node).
 
-Bottom panel: J_n^+ - N, the integer-valued strict upper threshold
-relative to the central index N. Chen (Section 9.2) claims that
+Bottom panel: m_n - N, the integer-valued strict upper threshold
+relative to the central index N. Proposition 2.1 implies that
 GCRR-GC produces the "unified strict threshold j >= N+1" -- i.e.,
-J_n^+ - N = 1 for all n, regardless of parity.
+m_n - N = 1 for all n, regardless of parity.
 
 Generates:
     figures_paper/delta_and_threshold.{pdf,png}
@@ -37,9 +37,9 @@ from gcrr.plotting import (
 # --- Toggle: also generate legacy color version? ---
 WRITE_COLOR = False
 
-# --- Parameters (Chen §9.4 primary non-ATM case) ---
+# --- Parameters (Section 5.1 primary non-ATM case) ---
 S, K, T, r, sigma = 100.0, 105.0, 0.5, 0.06, 0.20  # OTM
-N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
+N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
     ("gcrr_gc",    schemes.gcrr_gc),
@@ -92,7 +92,7 @@ def make_figure_paper(results: dict, out_dir: Path):
     ax_top.set_ylabel(r"$\Delta_n = 1 - 2\theta_n$")
     ax_top.set_ylim(-1.15, 1.15)
 
-    # Bottom panel: J_n^+ - N
+    # Bottom panel: m_n - N
     for key, _ in SCHEMES:
         out = results[key]
         threshold = out["m"] - N_arr
@@ -115,7 +115,7 @@ def make_figure_paper(results: dict, out_dir: Path):
 
     ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
     ax_bot.set_xlabel(r"$n$ (periods)")
-    ax_bot.set_ylabel(r"$J_n^+ - N$")
+    ax_bot.set_ylabel(r"$m_n - N$")
 
     ax_top.legend(
         loc="center left", bbox_to_anchor=(1.02, 0.5),
@@ -171,25 +171,25 @@ def make_figure_color(results: dict, out_dir: Path):
     for key, _ in SCHEMES:
         out = results[key]
         if key == "joshi_2009":
-            ax_top.plot(
-                N_VALUES, out["Delta"],
+            ax_bot.plot(
+                N_VALUES, out["m"] - N_arr,
                 marker="x", linestyle="none", color="#7F7F7F",
                 markersize=2.0, markeredgewidth=0.2,
-                label=SCHEME_LABELS[key],
+                label="_nolegend_",
             )
         elif key == "tian_1999":
-            ax_top.plot(
-                N_VALUES, out["Delta"],
+            ax_bot.plot(
+                N_VALUES, out["m"] - N_arr,
                 marker="v", linestyle="none", color="#7F7F7F",
                 markersize=1.5, markeredgewidth=0.2, fillstyle="none",
-                label=SCHEME_LABELS[key],
+                label="_nolegend_",
             )
         else:
-            plot_paper_series(ax_top, N_VALUES, out["Delta"], key)
+            plot_paper_series(ax_bot, N_VALUES, out["m"] - N_arr, key, label="_nolegend_")
 
     ax_bot.axhline(1, color="black", linewidth=0.4, alpha=0.4, zorder=0, linestyle="--")
     ax_bot.set_xlabel(r"$n$ (periods)")
-    ax_bot.set_ylabel(r"$J_n^+ - N$")
+    ax_bot.set_ylabel(r"$m_n - N$")
 
     ax_top.legend(
         loc="center left", bbox_to_anchor=(1.02, 0.5),

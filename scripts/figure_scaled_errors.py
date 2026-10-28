@@ -1,7 +1,7 @@
 """Phase-separated scaled errors for European call schemes.
 
 For each scheme, plots n * (C_n - C_BS) against n, separated by parity
-(even n vs odd n). Under phase-wise smooth convergence (Theorem 7.1),
+(even n vs odd n). Under phase-wise smooth convergence (Theorem 3.2),
 each phase should approach a horizontal line; CRR (un-centered) shows
 oscillation that doesn't flatten.
 
@@ -14,7 +14,7 @@ figures/ (used by talks/slides).
 
 Test case: European call.
     S = 100, T = 0.5, r = 0.06, sigma = 0.20.
-    (Primary non-ATM cases per Chen §9.4 revised draft.)
+    (Primary non-ATM cases per Section 5.1.)
 
 Schemes shown: CRR (gray baseline), Tian (1999), Joshi (2009), GCRR-GC.
 GCRR-fixed and GCRR-XPC omitted for legibility of the headline figure.
@@ -40,7 +40,7 @@ WRITE_COLOR = False
 
 # --- Fixed parameters ---
 S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
+N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
     ("crr",        schemes.crr),

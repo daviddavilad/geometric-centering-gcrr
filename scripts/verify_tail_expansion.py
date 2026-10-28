@@ -1,14 +1,13 @@
 """
-Numerical verification of the 1/n coefficient in Proposition B.1
-of the GCRR-GC draft.
+Numerical verification of the 1/n coefficient in the central-tail
+expansion, eq. (5) / Appendix B.
 
 Setup: For Bin(n, p_n) with p_n = 1/2 + a/(2*sqrt(n)) and n = 2N + eta,
 we compute the upper tail Psi = P(B_n >= N+1) exactly using scipy,
-then extract the empirical 1/n coefficient and compare to two candidate
-analytical predictions:
+then extract the empirical 1/n coefficient and compare it to the
+eq. (5) prediction:
 
-    DRAFT (as written):   rho + a^3       + (2*eta - 1) * a/4
-    DRAFT (typo-fixed):   rho + a^3 / 4   + (2*eta - 1) * a/4
+    rho + a^3 / 4   + (2*eta - 1) * a/4
 
 The expansion under test is
 
@@ -21,11 +20,11 @@ For each (a, eta), we evaluate Psi at increasing n, subtract the predicted
 Phi(a) - 2*chi_eta/sqrt(n)*phi(a) part, divide by phi(a)/n, and look at
 where the empirical residual settles.
 
-To remove the O(1/sqrt(n)) sub-leading bias we fit a three-term model
-    residual = C/n + D/n^{1.5} + E/n^2
+To remove the higher-order bias we fit a four-term model
+    residual = C/n + D/n^{1.5} + E/n^2 + F/n^{2.5}
 and report the C coefficient (least squares).
 
-Usage: uv run python scripts/verify_proposition_B1.py
+Usage: uv run python scripts/verify_tail_expansion.py
 """
 
 import numpy as np
@@ -50,7 +49,7 @@ def exact_upper_tail(n, eta, a, rho=0.0):
 def empirical_1_over_n_coefficient(a, eta, rho=0.0, n_values=None):
     """
     Fit the residual after subtracting the leading and 1/sqrt(n) terms
-    to a three-term model C/n + D/n^{1.5} + E/n^2 and return C.
+    to a four-term model C/n + D/n^{1.5} + E/n^2 + F/n^{2.5} and return C.
     """
     if n_values is None:
         base = [500, 1000, 2000, 5000, 10000, 20000, 50000, 100000]
@@ -69,36 +68,30 @@ def empirical_1_over_n_coefficient(a, eta, rho=0.0, n_values=None):
         n_list.append(n)
         residuals.append(residual)
 
-    A = np.array([[1.0 / n, 1.0 / n ** 1.5, 1.0 / n ** 2] for n in n_list])
+    A = np.array([[1.0 / n, 1.0 / n ** 1.5, 1.0 / n ** 2, 1.0 / n ** 2.5] for n in n_list])
     b = np.array(residuals)
     coef, *_ = np.linalg.lstsq(A, b, rcond=None)
     return coef[0]
 
 
-def draft_prediction_as_written(a, eta, rho=0.0):
-    """C = rho + a^3 + (2*eta - 1) * a/4"""
-    return rho + a ** 3 + (2 * eta - 1) * a / 4.0
-
-
-def draft_prediction_typo_fixed(a, eta, rho=0.0):
+def eq5_prediction(a, eta, rho=0.0):
     """C = rho + a^3/4 + (2*eta - 1) * a/4"""
     return rho + a ** 3 / 4.0 + (2 * eta - 1) * a / 4.0
 
 
 def main():
     print("=" * 78)
-    print(" Numerical verification of the 1/n coefficient in Proposition B.1")
+    print(" Verification of the 1/n coefficient in eq. (5) (Appendix B)")
     print("=" * 78)
     print()
     print(" For each (a, eta), we extract the empirical 1/n coefficient from")
     print(" Psi - Phi(a) + (2 chi_eta / sqrt n) phi(a), divided by phi(a)/n,")
-    print(" and compare to the two candidate analytical predictions.")
+    print(" and compare to the eq. (5) prediction.")
     print()
 
     header = (
         f"{'a':>6} {'eta':>4} | {'empirical C':>14} "
-        f"| {'draft as written':>16} {'err':>10} "
-        f"| {'draft typo-fixed':>16} {'err':>10}"
+        f"| {'eq. (5)':>16} {'err':>10}"
     )
     print(header)
     print("-" * len(header))
@@ -108,26 +101,20 @@ def main():
     for a in a_values:
         for eta in [0, 1]:
             C_empirical = empirical_1_over_n_coefficient(a, eta)
-            C_as_written = draft_prediction_as_written(a, eta)
-            C_typo_fixed = draft_prediction_typo_fixed(a, eta)
+            C_eq5 = eq5_prediction(a, eta)
 
-            err_as_written = abs(C_empirical - C_as_written)
-            err_typo_fixed = abs(C_empirical - C_typo_fixed)
+            err_eq5 = abs(C_empirical - C_eq5)
 
             print(
                 f"{a:>6.2f} {eta:>4} | {C_empirical:>14.8f} "
-                f"| {C_as_written:>16.8f} {err_as_written:>10.2e} "
-                f"| {C_typo_fixed:>16.8f} {err_typo_fixed:>10.2e}"
+                f"| {C_eq5:>16.8f} {err_eq5:>10.2e}"
             )
 
     print()
     print("Interpretation:")
-    print("  The 'empirical C' column is what the exact binomial CDF actually")
-    print("  produces in the limit. Whichever analytical prediction matches it")
-    print("  to high precision (errors ~ 1e-6 or smaller) is the correct form.")
-    print()
-    print("  The 'err' columns are |empirical - prediction|. The smaller column")
-    print("  identifies the correct analytical form.")
+    print("  'empirical C' is the 1/n coefficient extracted from the exact")
+    print("  binomial tail; 'err' is |empirical C - eq. (5)|. Errors of order")
+    print("  1e-6 or smaller confirm the eq. (5) coefficient.")
 
 
 if __name__ == "__main__":

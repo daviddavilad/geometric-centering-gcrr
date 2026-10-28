@@ -1,12 +1,12 @@
 """Strict digital errors for GCRR-GC and Joshi (2009).
 
-For each scheme, plots the raw error D^>_{N,eta} - D_BS against n,
+For each scheme, plots the raw error D^str_{N,eta} - D_BS against n,
 separated by parity. The strict digital pays 1 if S_T > K, 0 otherwise,
 priced as e^{-rT} * Psi_{N,eta}(p_n^B).
 
-Section 9.3 of the GCRR-GC draft predicts that the strict digital
-exhibits an "even-phase central-atom discrepancy of order n^{-1/2}".
-The empirical pattern (verified in scripts/verify_phase_gap.py) is:
+Section 4 predicts that the strict digital exhibits an "even-phase
+central-atom discrepancy of order n^{-1/2}". The empirical pattern
+(verified in tests/test_digital.py and gcrr.theory.digital_strict_even_coef) is:
 
   - Even-phase GCRR-GC error: O(1/sqrt(n)) with empirical coefficient
     ~-0.378 at OTM (K=105). This is the central-atom discrepancy.
@@ -14,7 +14,7 @@ The empirical pattern (verified in scripts/verify_phase_gap.py) is:
     smaller than even-phase at n=12800.
   - Joshi (odd n only): tracks GCRR-GC odd phase, also O(1/n).
 
-Figure 5 (figure_digital_corrected_errors.py) will show the half-node
+Figure OA.2 (figure_digital_corrected_errors.py) shows the half-node
 corrected digital, which removes the even-phase central-atom term and
 restores O(1/n) convergence in both phases.
 
@@ -47,7 +47,7 @@ WRITE_COLOR = False
 
 # --- Fixed parameters ---
 S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
+N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 SCHEMES = [
     ("joshi_2009", schemes.joshi_2009),
@@ -115,7 +115,7 @@ def make_figure_paper(K, moneyness_tag, results, out_dir):
 
     ax_even.set_title(r"Even $n$")
     ax_odd.set_title(r"Odd $n$")
-    ax_even.set_ylabel(r"$D^>_{N,\eta} - D_{BS}$")
+    ax_even.set_ylabel(r"$D^{str}_{N,\eta} - D_{BS}$")
 
     ax_odd.legend(loc="best", frameon=True)
 
@@ -159,7 +159,7 @@ def make_figure_color(K, moneyness_tag, results, out_dir):
 
     ax_even.set_title(r"Even $n$")
     ax_odd.set_title(r"Odd $n$")
-    ax_even.set_ylabel(r"$D^>_{N,\eta} - D_{BS}$")
+    ax_even.set_ylabel(r"$D^{str}_{N,\eta} - D_{BS}$")
 
     ax_odd.legend(loc="best", framealpha=0.9)
 

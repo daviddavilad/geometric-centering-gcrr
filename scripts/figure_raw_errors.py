@@ -5,7 +5,7 @@ Companion to scripts/figure_scaled_errors.py: the scaled-error figure
 shows convergence rates by dividing by 1/n; this figure shows the
 raw error magnitudes.
 
-The contrast Chen (Section 9.1) is after: a stretch parameter alone
+The contrast drawn in Section 5.2: a stretch parameter alone
 does not produce smooth convergence; the stretch must be chosen by
 the geometric-center condition. The fixed-stretch GCRR scheme (with
 lambda = 1.1) is included as the control. CRR (lambda = 1) is the
@@ -21,7 +21,7 @@ figures/ (used by talks/slides).
 
 Test case: European call.
     S = 100, T = 0.5, r = 0.06, sigma = 0.20.
-    (Primary non-ATM cases per Chen §9.4 revised draft.)
+    (Primary non-ATM cases per Section 5.1.)
 """
 from pathlib import Path
 
@@ -46,7 +46,7 @@ WRITE_COLOR = False
 
 # --- Fixed parameters ---
 S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
-N_VALUES = np.arange(25, 501)  # Chen §9.4: n=25..500 for figures
+N_VALUES = np.arange(25, 501)  # Section 5.1: n=25..500 for figures
 
 # In this figure: three schemes, ordered so GCRR-GC is drawn last (foreground)
 SCHEMES = [

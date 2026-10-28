@@ -36,9 +36,9 @@ def test_digital_strict_monotone_in_K():
 def test_digital_strict_converges_to_bs_at_sqrt_n_rate():
     """The strict digital converges to e^{-rT} Phi(d_2) at O(1/sqrt(n)).
     
-    The leading error is the 'central-atom discrepancy' (Section 9.3 of
-    the draft): the strict digital's even-phase error is O(1/sqrt(n))
-    rather than O(1/n). This slow rate is the motivation for the
+    The leading error is the 'central-atom discrepancy' (Section 4): 
+    the strict digital's even-phase error is O(1/sqrt(n)) rather
+    than O(1/n). This slow rate is the motivation for the
     half-node corrected digital, which removes the central-atom term.
     
     Test: error * sqrt(n) should be approximately constant across n.
@@ -65,7 +65,7 @@ def test_digital_strict_converges_to_bs_at_sqrt_n_rate():
 def test_digital_strict_at_K_equals_S_with_zero_drift():
     """When K = S and r = sigma^2/2 (zero log-drift), the BS digital
     equals exactly e^{-rT}/2. The binomial strict digital approaches
-    this at the O(1/sqrt(n)) rate of Section 9.3.
+    this at the O(1/sqrt(n)) rate of Section 4.
     
     This is a sanity check on the d2 sign and the discount factor.
     At n = 1000, the 1/sqrt(n) envelope allows error ~ 0.03.
@@ -94,18 +94,18 @@ def test_bs_digital_strict_at_K_equals_S_zero_drift():
 
 def test_half_node_corrected_digital_symmetry_at_p_half():
     """The half-node corrected digital satisfies the exact symmetry
-    Psi^*_{N,0}(1/2) = Psi^*_{N,1}(1/2) = 1/2.
+    Psi^hn_{N,0}(1/2) = Psi^hn_{N,1}(1/2) = 1/2.
 
     This is the design property of the correction: at p = 1/2 (zero drift),
     the corrected upper tail equals exactly 1/2 in both phases.
 
-    Implementation note: tested by directly checking the Psi^*_{N,eta}(1/2)
+    Implementation note: tested by directly checking the Psi^hn_{N,eta}(1/2)
     formula. We use n = 50 (even) and n = 51 (odd) as a representative
     parity-pair; the symmetry is exact in floating point for any N.
     """
     from scipy.stats import binom
 
-    # Even phase: n = 2N, Psi^*_{N,0}(1/2) = Psi_{N,0}(1/2) + (1/2) C(2N, N) (1/2)^(2N)
+    # Even phase: n = 2N, Psi^hn_{N,0}(1/2) = Psi_{N,0}(1/2) + (1/2) C(2N, N) (1/2)^(2N)
     for n in [50, 100, 200, 500]:
         N = n // 2
         psi = binom.sf(N, n, 0.5)
@@ -115,7 +115,7 @@ def test_half_node_corrected_digital_symmetry_at_p_half():
             f"Even-phase symmetry failed at n={n}: Psi*={psi_star}"
         )
 
-    # Odd phase: Psi^*_{N,1}(1/2) = Psi_{N,1}(1/2) since correction is zero
+    # Odd phase: Psi^hn_{N,1}(1/2) = Psi_{N,1}(1/2) since correction is zero
     for n in [51, 101, 201, 501]:
         N = n // 2  # = (n-1)/2 for odd n
         psi = binom.sf(N, n, 0.5)

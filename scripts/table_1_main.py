@@ -1,10 +1,9 @@
 """Generate main-text Table 1: convergence for K = 105 and K = 95.
 
-Per Chen Jul 15 email: Table 1 belongs in the main text and reports 
-comparisons across schemes. This script produces a Chung-Shih (2007) 
-Table 2-style two-panel table:
+Table 1 reports prices and signed errors across schemes. This script
+produces a Chung-Shih (2007) Table 2-style two-panel table: 
 
-    Upper panel: K = 105 (OTM), the primary non-ATM case per Chen §9.4
+    Upper panel: K = 105 (OTM), the primary non-ATM case in Section 5.1
     Lower panel: K =  95 (ITM), the symmetric-moneyness robustness case
 
 Rows per panel: n ∈ {50, 100, 500, 1000, 5000}, matching the benchmark
@@ -18,7 +17,7 @@ Joshi handling: Joshi's construction requires odd n. At each requested
 even n we report Joshi's price at the adjacent odd n_eff = n + 1.
 This is footnoted in the table output.
 
-Fixed parameters (Chen §9.4 primary non-ATM case):
+Fixed parameters (Section 5.1 primary non-ATM case):
     S_0 = 100, T = 0.5, r = 0.06, sigma = 0.20.
 
 Outputs (in tables/):
@@ -36,7 +35,7 @@ from gcrr.black_scholes import bs_call
 from gcrr.pricer import binomial_price
 
 
-# --- Fixed parameters (Chen §9.4 primary non-ATM cases) ---
+# --- Fixed parameters (Section 5.1 primary non-ATM cases) ---
 S = 100.0
 T = 0.5
 R = 0.06
@@ -46,7 +45,7 @@ SIGMA = 0.20
 K_UPPER = 105.0  # OTM primary
 K_LOWER = 95.0   # ITM symmetric-moneyness robustness
 
-# --- Chen's benchmark n values (WAND 2002 / Chung-Shih 2007) ---
+# --- Benchmark n values (WAND 2002 / Chung-Shih 2007) ---
 SELECTED_N = [50, 100, 500, 1000, 5000]
 
 # --- Scheme registry ---
