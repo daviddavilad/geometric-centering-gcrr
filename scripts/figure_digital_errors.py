@@ -28,6 +28,7 @@ figures/ (used by talks/slides).
 
 from pathlib import Path
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 
@@ -41,6 +42,8 @@ from gcrr.plotting import (
     set_style,
     set_style_paper,
 )
+
+matplotlib.use("Agg")  # same layout on every OS
 
 # --- Toggle: also generate legacy color versions? ---
 WRITE_COLOR = False

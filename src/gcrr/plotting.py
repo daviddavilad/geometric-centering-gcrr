@@ -134,6 +134,20 @@ SCHEME_STYLES_PAPER = {
 
 MARKER_EVERY_PAPER = 25
 
+# --- Paper color palette ---
+#
+# Okabe-Ito colors (colorblind-safe), used instead of the monochrome
+# colors when color=True. Markers stay the same, so color figures still
+# read in grayscale print. Orange is light on white, so it is kept for
+# the GCRR-fixed control only.
+SCHEME_COLORS_PAPER = {
+    "crr": "#7F7F7F",  # gray for the baseline
+    "gcrr_fixed": "#E69F00",  # orange: fixed-stretch control
+    "tian_1999": "#009E73",  # green
+    "joshi_2009": "#D55E00",  # vermillion
+    "gcrr_gc": "#0072B2",  # blue: the proposed scheme
+}
+
 
 def set_style_paper():
     """Apply paper-style (monochrome, Chung-Shih inspired) styling.
@@ -181,8 +195,9 @@ def set_style_paper():
     )
 
 
-def plot_paper_series(ax, x, y, scheme_key, label=None, markevery=None):
-    """Plot one series in paper style. Returns Line2D."""
+def plot_paper_series(ax, x, y, scheme_key, label=None, markevery=None, color=False):
+    """Plot one series in paper style. Returns Line2D. color=True swaps
+    in SCHEME_COLORS_PAPER; markers and sizes are unchanged."""
     style = SCHEME_STYLES_PAPER[scheme_key]
     label = label if label is not None else SCHEME_LABELS[scheme_key]
 
@@ -191,12 +206,14 @@ def plot_paper_series(ax, x, y, scheme_key, label=None, markevery=None):
         markevery if markevery is not None else style.get("markevery", None)
     )
 
+    series_color = SCHEME_COLORS_PAPER[scheme_key] if color else style["color"]
+
     return ax.plot(
         x,
         y,
         marker=style["marker"],
         linestyle=style["linestyle"],
-        color=style["color"],
+        color=series_color,
         markersize=style["markersize"],
         fillstyle=style["fillstyle"],
         markeredgewidth=style["markeredgewidth"],
