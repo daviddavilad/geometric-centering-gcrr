@@ -9,8 +9,6 @@ Generates two figures:
     figures_paper/scaled_errors_itm.{pdf,png}  -- K = 95  (ITM)
     figures_paper/scaled_errors_otm.{pdf,png}  -- K = 105 (OTM)
 
-Run with --color to write color previews to figures/color_preview/.
-
 Test case: European call.
     S = 100, T = 0.5, r = 0.06, sigma = 0.20.
     (Primary non-ATM cases per Section 5.1.)
@@ -19,7 +17,6 @@ Schemes shown: CRR (gray baseline), Tian (1999), Joshi (2009), GCRR-GC.
 GCRR-fixed and GCRR-XPC omitted for legibility of the headline figure.
 """
 
-import argparse
 from pathlib import Path
 
 import matplotlib
@@ -55,23 +52,21 @@ def _compute_results(K: float):
     }
 
 
-def make_figure_paper(
-    K: float, moneyness_tag: str, results: dict, out_dir: Path, color: bool = False
-):
-    """Paper-style scatter figure (monochrome, or color with color=True)."""
+def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path):
+    """Paper figure: one panel per phase."""
     set_style_paper()
     fig, axes = plt.subplots(1, 2, figsize=(9, 4), sharey=True)
     ax_even, ax_odd = axes
 
     for key, _ in SCHEMES:
         out = results[key]
-        plot_paper_series(ax_even, out.n_even, out.scaled_err_even, key, color=color)
+        plot_paper_series(ax_even, out.n_even, out.scaled_err_even, key)
         plot_paper_series(
-            ax_odd, out.n_odd, out.scaled_err_odd, key, label="_nolegend_", color=color
+            ax_odd, out.n_odd, out.scaled_err_odd, key, label="_nolegend_"
         )
 
     for ax in axes:
-        ax.axhline(0, color="black", linewidth=0.5, alpha=0.6, zorder=0)
+        ax.axhline(0, color="0.6", linewidth=0.5, zorder=0)
         ax.set_xlabel(r"$n$ (periods)")
 
     ax_even.set_title("Even $n$")
@@ -86,7 +81,6 @@ def make_figure_paper(
         ncol=len(labels),
         bbox_to_anchor=(0.5, -0.02),
         frameon=True,
-        markerscale=3,
     )
 
     # fig.suptitle removed: parameters live in the Word caption
@@ -102,24 +96,12 @@ def make_figure_paper(
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument(
-        "--color",
-        action="store_true",
-        help="write color previews to figures/color_preview/",
-    )
-    args = parser.parse_args()
-
-    project_root = Path(__file__).parent.parent
-    if args.color:
-        out_dir = project_root / "figures" / "color_preview"
-    else:
-        out_dir = project_root / "figures_paper"
-    out_dir.mkdir(parents=True, exist_ok=True)
+    out_dir = Path(__file__).parent.parent / "figures_paper"
+    out_dir.mkdir(exist_ok=True)
 
     for K, tag in [(95.0, "ITM"), (105.0, "OTM")]:
         results = _compute_results(K)
-        make_figure_paper(K, tag, results, out_dir, color=args.color)
+        make_figure_paper(K, tag, results, out_dir)
 
 
 if __name__ == "__main__":

@@ -13,6 +13,7 @@ with hue and lightness chosen so adjacent series in a legend don't blur.
 from __future__ import annotations
 
 import matplotlib as mpl
+import numpy as np
 
 # Color palette for the six schemes.
 # Order: CRR, GCRR-fixed, GCRR-XPC, Tian (1999), Joshi (2009), GCRR-GC.
@@ -71,86 +72,56 @@ def set_style():
     )
 
 
-# --- Paper (monochrome) style ---
+# --- Paper style ---
 #
-# Paper figures follow the monochrome style of Chung and Shih (2007):
-#   - all-black lines
-#   - line style differentiation (solid, dashed, dotted)
-#   - marker shape differentiation (circle, square, triangle, cross)
-#   - sparse marker frequency (every ~10th point)
-#
-# GCRR-GC is the paper's contribution and gets slightly heavier/darker
-# treatment: linewidth 1.8 vs 1.3 for the others.
+# Color (Okabe-Ito, colorblind-safe) that still reads in grayscale print:
+# each scheme has its own marker shape, and markers sit on every
+# MARKER_STEP-th point, offset per scheme so they do not overlap. A thin
+# line through all points shows the shape. GCRR-GC is drawn heavier and
+# on top. Journal rules: lines at least 0.3 pt, no transparency.
+
+MARKER_STEP = 6
+MARKER_SIZE = 3  # markers on every MARKER_STEP-th point, with a line
+MARKER_SIZE_DENSE = 2  # markers on every point, no line (Figure 3)
 
 SCHEME_STYLES_PAPER = {
     "crr": {
+        "color": "#7F7F7F",  # gray for the baseline
         "marker": "o",
-        "linestyle": "none",
-        "color": "#9F9F9F",
-        "linewidth": 0.1,
-        "markersize": 2,
-        "fillstyle": "full",
-        "markeredgewidth": 0.1,
+        "linewidth": 0.6,
+        "marker_offset": 0,
     },
     "gcrr_fixed": {
+        "color": "#E69F00",  # orange: fixed-stretch control
         "marker": "^",
-        "linestyle": "none",
-        "color": "#5B5B5B",
-        "linewidth": 0.1,
-        "markersize": 2,
-        "fillstyle": "full",
-        "markeredgewidth": 0.1,
-    },
-    "gcrr_gc": {
-        "marker": "s",
-        "linestyle": "none",
-        "color": "#000000",
-        "linewidth": 0.1,
-        "markersize": 2,
-        "fillstyle": "full",
-        "markeredgewidth": 0.2,
-        "markevery": 1,
+        "linewidth": 0.8,
+        "marker_offset": 1,
     },
     "tian_1999": {
+        "color": "#009E73",  # green
         "marker": "v",
-        "linestyle": "none",
-        "color": "#5B5B5B",
-        "linewidth": 0.1,
-        "markersize": 2,
-        "fillstyle": "full",
-        "markeredgewidth": 0.1,
+        "linewidth": 0.8,
+        "marker_offset": 2,
+        "break_at_jumps": True,  # Tian's tilt resets, so its errors jump
     },
     "joshi_2009": {
+        "color": "#D55E00",  # vermillion
         "marker": "x",
-        "linestyle": "none",
-        "color": "#444444",
-        "linewidth": 0.1,
-        "markersize": 2,
-        "fillstyle": "none",
-        "markeredgewidth": 0.5,
-        "markevery": 1,
+        "linewidth": 0.8,
+        "marker_offset": 3,
     },
-}
-
-MARKER_EVERY_PAPER = 25
-
-# --- Paper color palette ---
-#
-# Okabe-Ito colors (colorblind-safe), used instead of the monochrome
-# colors when color=True. Markers stay the same, so color figures still
-# read in grayscale print. Orange is light on white, so it is kept for
-# the GCRR-fixed control only.
-SCHEME_COLORS_PAPER = {
-    "crr": "#7F7F7F",  # gray for the baseline
-    "gcrr_fixed": "#E69F00",  # orange: fixed-stretch control
-    "tian_1999": "#009E73",  # green
-    "joshi_2009": "#D55E00",  # vermillion
-    "gcrr_gc": "#0072B2",  # blue: the proposed scheme
+    "gcrr_gc": {
+        "color": "#0072B2",  # blue: the proposed scheme
+        "marker": "s",
+        "linewidth": 1.2,
+        "marker_offset": 8,
+        "zorder": 4,
+    },
 }
 
 
 def set_style_paper():
-    """Apply paper-style (monochrome, Chung-Shih inspired) styling.
+    """Apply the paper style (color, STIX fonts, Chung-Shih-like axes).
 
     Call this at the top of a figure script INSTEAD of set_style() when
     generating paper-ready figures. Not compatible with set_style() in
@@ -163,6 +134,9 @@ def set_style_paper():
             "figure.dpi": 100,
             "savefig.dpi": 300,
             "savefig.bbox": "tight",
+            # Embed fonts as TrueType (journal and arXiv requirement)
+            "pdf.fonttype": 42,
+            "ps.fonttype": 42,
             # Fonts: STIX (Times-style) ships with matplotlib, so figures match on every machine
             "font.family": "serif",
             "font.serif": ["STIXGeneral"],
@@ -195,28 +169,65 @@ def set_style_paper():
     )
 
 
-def plot_paper_series(ax, x, y, scheme_key, label=None, markevery=None, color=False):
-    """Plot one series in paper style. Returns Line2D. color=True swaps
-    in SCHEME_COLORS_PAPER; markers and sizes are unchanged."""
+def _break_at_jumps(x, y, factor=20.0):
+    """Insert NaN before each jump so a line does not bridge it.
+
+    A jump is a step larger than `factor` times the median step.
+    """
+    x = np.asarray(x, dtype=float)
+    y = np.asarray(y, dtype=float)
+    steps = np.abs(np.diff(y))
+    if steps.size == 0:
+        return x, y
+    jumps = np.flatnonzero(steps > factor * np.median(steps)) + 1
+    return np.insert(x, jumps, np.nan), np.insert(y, jumps, np.nan)
+
+
+def plot_paper_series(ax, x, y, scheme_key, label=None, lines=True):
+    """Plot one scheme in paper style and return its Line2D.
+
+    lines=True: a thin line through every point, markers on every
+    MARKER_STEP-th point. lines=False: small markers on every point and
+    no line, for step-like data (Figure 3).
+    """
     style = SCHEME_STYLES_PAPER[scheme_key]
-    label = label if label is not None else SCHEME_LABELS[scheme_key]
+    label = SCHEME_LABELS[scheme_key] if label is None else label
 
-    # Per-scheme markevery from the style dict, unless overridden
-    effective_markevery = (
-        markevery if markevery is not None else style.get("markevery", None)
-    )
+    if lines:
+        if style.get("break_at_jumps", False):
+            x, y = _break_at_jumps(x, y)
+        linestyle = "-"
+        markevery = (style["marker_offset"], MARKER_STEP)
+        markersize = MARKER_SIZE
+    else:
+        linestyle = "none"
+        markevery = None
+        markersize = MARKER_SIZE_DENSE
 
-    series_color = SCHEME_COLORS_PAPER[scheme_key] if color else style["color"]
-
-    return ax.plot(
+    (line,) = ax.plot(
         x,
         y,
+        color=style["color"],
+        linestyle=linestyle,
+        linewidth=style["linewidth"],
         marker=style["marker"],
-        linestyle=style["linestyle"],
-        color=series_color,
-        markersize=style["markersize"],
-        fillstyle=style["fillstyle"],
-        markeredgewidth=style["markeredgewidth"],
-        markevery=effective_markevery,
+        markersize=markersize,
+        markevery=markevery,
+        markeredgewidth=0.6,
+        zorder=style.get("zorder", 2),
         label=label,
     )
+    return line
+
+
+def plot_paper_series_by_phase(ax, n, y, scheme_key, label=None):
+    """Plot even and odd n as two lines in one style, one legend entry.
+
+    A single line through all n would zigzag between the two phases.
+    """
+    n = np.asarray(n)
+    y = np.asarray(y)
+    even = n % 2 == 0
+    line = plot_paper_series(ax, n[even], y[even], scheme_key, label=label)
+    plot_paper_series(ax, n[~even], y[~even], scheme_key, label="_nolegend_")
+    return line
