@@ -1,13 +1,9 @@
-"""Matplotlib styling for GCRR-GC figures.
+"""Matplotlib styling for the GCRR-GC paper figures.
 
-Centralizes color palette, font sizes, and rcParams so that all figures
-share a consistent look. Call `set_style()` at the top of any figure
-script before doing matplotlib work.
-
-Color palette: six schemes need to be distinguishable in print and on
-screen, including for readers with deuteranopia. Uses a manually-curated
-subset of ColorBrewer's qualitative palettes ('Set1' / 'Set2'-derived),
-with hue and lightness chosen so adjacent series in a legend don't blur.
+Every paper figure calls set_style_paper() and draws each scheme with
+plot_paper_series (or plot_paper_series_by_phase), so all figures share
+one style: Okabe-Ito colors, one marker shape per scheme, STIX fonts,
+and the journal's rules on line width and transparency.
 """
 
 from __future__ import annotations
@@ -18,14 +14,6 @@ import numpy as np
 # Color palette for the six schemes.
 # Order: CRR, GCRR-fixed, GCRR-XPC, Tian (1999), Joshi (2009), GCRR-GC.
 # GCRR-GC is the new scheme -- it gets the visually distinct dark red.
-SCHEME_COLORS = {
-    "crr": "#666666",  # neutral gray -- the baseline
-    "gcrr_fixed": "#1f77b4",  # blue -- control
-    "gcrr_xpc": "#2ca02c",  # green -- even-only predecessor
-    "tian_1999": "#ff7f0e",  # orange -- alternative centered
-    "joshi_2009": "#9467bd",  # purple -- alternative centered, odd-only
-    "gcrr_gc": "#d62728",  # red -- the new scheme
-}
 
 SCHEME_LABELS = {
     "crr": "CRR",
@@ -35,41 +23,6 @@ SCHEME_LABELS = {
     "joshi_2009": "Joshi (2009)",
     "gcrr_gc": "GCRR-GC",
 }
-
-
-def set_style():
-    """Apply consistent matplotlib styling across all figures."""
-    mpl.rcParams.update(
-        {
-            # Figure
-            "figure.figsize": (8, 5),
-            "figure.dpi": 100,
-            "savefig.dpi": 300,
-            "savefig.bbox": "tight",
-            # Fonts
-            "font.family": "serif",
-            "font.serif": ["Computer Modern Roman", "DejaVu Serif"],
-            "font.size": 11,
-            "axes.labelsize": 12,
-            "axes.titlesize": 13,
-            "xtick.labelsize": 10,
-            "ytick.labelsize": 10,
-            "legend.fontsize": 10,
-            # Axes
-            "axes.grid": True,
-            "grid.alpha": 0.3,
-            "grid.linewidth": 0.5,
-            "axes.axisbelow": True,
-            "axes.spines.top": False,
-            "axes.spines.right": False,
-            # Lines and markers
-            "lines.linewidth": 1.5,
-            "lines.markersize": 4,
-            # Math text
-            "text.usetex": False,
-            "mathtext.fontset": "cm",
-        }
-    )
 
 
 # --- Paper style ---
@@ -93,13 +46,13 @@ SCHEME_STYLES_PAPER = {
     },
     "gcrr_fixed": {
         "color": "#E69F00",  # orange: fixed-stretch control
-        "marker": "^",
+        "marker": "D",
         "linewidth": 0.8,
         "marker_offset": 1,
     },
     "tian_1999": {
         "color": "#009E73",  # green
-        "marker": "v",
+        "marker": "^",
         "linewidth": 0.8,
         "marker_offset": 2,
         "break_at_jumps": True,  # Tian's tilt resets, so its errors jump
@@ -121,12 +74,8 @@ SCHEME_STYLES_PAPER = {
 
 
 def set_style_paper():
-    """Apply the paper style (color, STIX fonts, Chung-Shih-like axes).
-
-    Call this at the top of a figure script INSTEAD of set_style() when
-    generating paper-ready figures. Not compatible with set_style() in
-    the same script call.
-    """
+    """Apply the paper style (color, STIX fonts, Chung-Shih-like axes)."""
+    
     mpl.rcParams.update(
         {
             # Figure

@@ -26,9 +26,6 @@ central-atom story of Section 4.
 Generates two figures:
     figures_paper/digital_corrected_errors_itm.{pdf,png}  -- K = 95  (ITM)
     figures_paper/digital_corrected_errors_otm.{pdf,png}  -- K = 105 (OTM)
-
-Set WRITE_COLOR = True to also generate legacy color versions in
-figures/ (used by talks/slides).
 """
 
 from pathlib import Path
@@ -41,17 +38,11 @@ from gcrr import schemes
 from gcrr.black_scholes import bs_digital_strict
 from gcrr.digital import digital_half_node_corrected_price
 from gcrr.plotting import (
-    SCHEME_COLORS,
-    SCHEME_LABELS,
     plot_paper_series,
-    set_style,
     set_style_paper,
 )
 
 matplotlib.use("Agg")  # same layout on every OS
-
-# --- Toggle: also generate legacy color versions? ---
-WRITE_COLOR = False
 
 # --- Fixed parameters ---
 S, T, r, sigma = 100.0, 0.5, 0.06, 0.20
@@ -102,7 +93,7 @@ def _compute_results(K):
 
 
 def make_figure_paper(K, moneyness_tag, results, out_dir):
-    """Paper-style monochrome figure: two panels with independent y-axes."""
+    """Paper figure: one panel per phase."""
     set_style_paper()
 
     fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(9, 4))
@@ -117,7 +108,7 @@ def make_figure_paper(K, moneyness_tag, results, out_dir):
             plot_paper_series(ax_odd, out["n_odd"], out["err_odd"], key)
 
     for ax in (ax_even, ax_odd):
-        ax.axhline(0, color="black", linewidth=0.5, alpha=0.6, zorder=0)
+        ax.axhline(0, color="0.6", linewidth=0.5, zorder=0)
         ax.set_xlabel(r"$n$ (periods)")
 
     ax_even.set_title(r"Even $n$")
@@ -138,81 +129,12 @@ def make_figure_paper(K, moneyness_tag, results, out_dir):
     plt.close(fig)
 
 
-def make_figure_color(K, moneyness_tag, results, out_dir):
-    """Legacy color figure: preserved for talks/slides."""
-    set_style()
-
-    fig, (ax_even, ax_odd) = plt.subplots(1, 2, figsize=(12, 5))
-
-    sizes = {"joshi_2009": 10, "gcrr_gc": 3}
-    for key, _ in SCHEMES:
-        out = results[key]
-        if len(out["n_even"]) > 0:
-            ax_even.scatter(
-                out["n_even"],
-                out["err_even"],
-                color=SCHEME_COLORS[key],
-                marker="o",
-                s=sizes[key],
-                alpha=0.85,
-                edgecolors="none",
-            )
-        if len(out["n_odd"]) > 0:
-            ax_odd.scatter(
-                out["n_odd"],
-                out["err_odd"],
-                color=SCHEME_COLORS[key],
-                marker="o",
-                s=sizes[key],
-                alpha=0.85,
-                label=SCHEME_LABELS[key],
-                edgecolors="none",
-            )
-
-    for ax in (ax_even, ax_odd):
-        ax.axhline(0, color="black", linewidth=0.5, alpha=0.5, zorder=0)
-        ax.set_xlabel(r"$n$ (periods)")
-
-    ax_even.set_title(r"Even $n$")
-    ax_odd.set_title(r"Odd $n$")
-    ax_even.set_ylabel(r"$D^{hn}_{N,\eta} - D_{BS}$")
-
-    ax_odd.legend(loc="best", framealpha=0.9)
-
-    fig.suptitle(
-        f"Half-node corrected digital errors: {moneyness_tag} "
-        f"($S={S:.0f}$, $K={K:.0f}$, $T={T}$, $r={r}$, $\\sigma={sigma}$)",
-        fontsize=12,
-    )
-    fig.tight_layout(rect=(0, 0, 1, 0.97))
-
-    stem = f"digital_corrected_errors_{moneyness_tag.lower()}"
-    out_pdf = out_dir / f"{stem}.pdf"
-    out_png = out_dir / f"{stem}.png"
-    fig.savefig(out_pdf)
-    fig.savefig(out_png, dpi=150)
-    print(f"Saved {out_pdf} (+ .png)")
-    plt.close(fig)
-
-
 def main():
-    project_root = Path(__file__).parent.parent
-
-    # Paper (monochrome) output
-    paper_dir = project_root / "figures_paper"
-    paper_dir.mkdir(exist_ok=True)
+    out_dir = Path(__file__).parent.parent / "figures_paper"
+    out_dir.mkdir(exist_ok=True)
 
     for K, tag in [(95.0, "ITM"), (105.0, "OTM")]:
-        results = _compute_results(K)
-        make_figure_paper(K, tag, results, paper_dir)
-
-    # Optional: legacy color output
-    if WRITE_COLOR:
-        color_dir = project_root / "figures"
-        color_dir.mkdir(exist_ok=True)
-        for K, tag in [(95.0, "ITM"), (105.0, "OTM")]:
-            results = _compute_results(K)
-            make_figure_color(K, tag, results, color_dir)
+        make_figure_paper(K, tag, _compute_results(K), out_dir)
 
 
 if __name__ == "__main__":

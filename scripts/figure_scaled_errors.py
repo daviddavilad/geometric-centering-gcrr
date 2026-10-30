@@ -71,7 +71,7 @@ def make_figure_paper(K: float, moneyness_tag: str, results: dict, out_dir: Path
 
     ax_even.set_title("Even $n$")
     ax_odd.set_title("Odd $n$")
-    ax_even.set_ylabel(r"$n \cdot (C_n - C^{\mathrm{BS}})$")
+    ax_even.set_ylabel(r"$n \cdot (C_n - C_{BS})$")
 
     handles, labels = ax_even.get_legend_handles_labels()
     fig.legend(
