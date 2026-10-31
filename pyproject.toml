@@ -1,7 +1,13 @@
 [project]
 name = "gcrr"
 version = "0.1.0"
-description = "Code accompanying the GCRR-GC binomial option pricing paper (Chen and Davila)"
+description = "Code accompanying the GCRR-GC binomial option pricing paper (Chen and Dávila)"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "Hsuan-Chi Chen" },
+    { name = "David Dávila" },
+]
 requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.26",
