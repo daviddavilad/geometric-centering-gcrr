@@ -29,13 +29,41 @@ def bs_call_mp(S, K, T, r, sigma):
     return S * mp.ncdf(d1) - K * mp.exp(-r * T) * mp.ncdf(d2)
 
 
+def _upper_tail_mp(n: int, m: int, p):
+    """P(Bin(n, p) >= m) at the working precision mp.mp.dps.
+
+    Sums the terms upward from k = m using the ratio
+    t_{k+1} / t_k = (n - k) / (k + 1) * p / (1 - p), and stops once a
+    term is negligible. Unlike mp.betainc, whose series fails to converge
+    near n = 10,000 at 40 digits, this works for any n (about 2,300
+    terms at n = 100,000).
+    """
+    q = 1 - p
+    term = mp.exp(
+        mp.loggamma(n + 1)
+        - mp.loggamma(m + 1)
+        - mp.loggamma(n - m + 1)
+        + m * mp.log(p)
+        + (n - m) * mp.log(q)
+    )
+    total = term
+    ratio = p / q
+    tol = mp.mpf(10) ** (-(mp.mp.dps + 5))
+    for k in range(m, n):
+        term *= (n - k) / mp.mpf(k + 1) * ratio
+        total += term
+        if term < tol * total:
+            break
+    return total
+
+
 def gcrr_gc_call_mp(S, K, T, r, sigma, n: int):
     """GCRR-GC European call via Proposition 3.1, all in mpmath:
     kappa = 2 log(K/S) / (sigma sqrt(nT)),  lambda = (kappa + sqrt(kappa^2 + 4)) / 2,
     h = T/n,  u = exp(lambda sigma sqrt(h)),  d = exp(-sigma sqrt(h) / lambda),
     p^B = (e^{rh} - d) / (u - d),  p^S = p^B u e^{-rh},  m = N + 1,
     C = S Psi(p^S) - K e^{-rT} Psi(p^B),
-    Psi(p) = P(Bin(n, p) >= m) = I_p(m, n - m + 1)   (regularized incomplete beta).
+    Psi(p) = P(Bin(n, p) >= m), summed directly by _upper_tail_mp.
     """
 
     S, K, T, r, sigma = (mp.mpf(str(v)) for v in (S, K, T, r, sigma))
@@ -58,8 +86,8 @@ def gcrr_gc_call_mp(S, K, T, r, sigma, n: int):
     # Unified strict exercise threshold
     m = n // 2 + 1
 
-    # Regularized incomplete beta gives binomial upper tails
-    tail_S = mp.betainc(m, n - m + 1, 0, pS, regularized=True)
-    tail_B = mp.betainc(m, n - m + 1, 0, pB, regularized=True)
+    # Binomial upper tails, summed directly (valid for any n)
+    tail_S = _upper_tail_mp(n, m, pS)
+    tail_B = _upper_tail_mp(n, m, pB)
 
     return S * tail_S - K * mp.exp(-r * T) * tail_B

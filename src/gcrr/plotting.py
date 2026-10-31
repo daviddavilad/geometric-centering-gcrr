@@ -75,7 +75,7 @@ SCHEME_STYLES_PAPER = {
 
 def set_style_paper():
     """Apply the paper style (color, STIX fonts, Chung-Shih-like axes)."""
-    
+
     mpl.rcParams.update(
         {
             # Figure

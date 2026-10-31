@@ -21,14 +21,15 @@ Outputs (tables/):
 from itertools import product
 from pathlib import Path
 
+import mpmath as mp
 import numpy as np
 import pandas as pd
 
-from gcrr import schemes
-from gcrr.black_scholes import bs_call
 from gcrr.errors import fit_leading_constant
-from gcrr.pricer import two_tail_call_price
+from gcrr.high_precision import bs_call_mp, gcrr_gc_call_mp
 from gcrr.theory import A_eta, phase_gap
+
+mp.mp.dps = 40  # fit uses n up to 1e5, where n amplifies double-precision rounding
 
 # WAND-style panel (Section 5.1)
 S0, RATE = 40.0, 0.06
@@ -44,22 +45,18 @@ OUTPUT_DIR = Path(__file__).parent.parent / "tables"
 
 def fit_phase_constant(S, K, T, r, sigma, eta: int) -> float:
     """Fitted A_eta: least-squares fit of n (C_n - C_BS) = A + B n^{-1/2} + C n^{-1}
-    over n = base + eta, base in FIT_N_BASES, with GCRR-GC prices from the
-    two-tail representation (Proposition 3.1) at threshold m = N + 1.
+    over n = base + eta, base in FIT_N_BASES. Prices are 40-digit GCRR-GC
+    prices from the two-tail representation (Proposition 3.1), so the fit
+    does not depend on the machine's floating-point libraries.
     """
     n_values = np.array([base + eta for base in FIT_N_BASES], dtype=int)
 
-    C_BS = bs_call(S, K, T, r, sigma)
+    C_BS = bs_call_mp(S, K, T, r, sigma)
     scaled_errors = []
-
     for n in n_values:
         n = int(n)
-
-        params = schemes.gcrr_gc(S, K, T, r, sigma, n)
-
-        C_n = two_tail_call_price(S, K, T, r, params, m=n // 2 + 1)
-
-        scaled_errors.append(n * (C_n - C_BS))
+        C_n = gcrr_gc_call_mp(S, K, T, r, sigma, n)
+        scaled_errors.append(float(n * (C_n - C_BS)))
 
     return fit_leading_constant(n_values, scaled_errors)
 
@@ -128,7 +125,7 @@ def write_markdown(rows: list[dict], path: Path):
         "**Table 2.** Phase-wise constants and phase gap for GCRR-GC across "
         "the WAND panel ($S_0=40$, $r=0.06$). $\\hat{A}_\\eta$ are least-squares "
         "fits of $n(C_n - C_{BS}) = A + Bn^{-1/2} + Cn^{-1}$ over "
-        "$n \\in [10^3, 10^5]$ in each phase; predictions are from eqs. (8) "
+        "$n \\in [10^3, 10^5]$ in each phase, using 40-digit prices; predictions are from eqs. (8) "
         "and (9). Max resid. is the largest of the three absolute differences.\n\n"
     )
 
