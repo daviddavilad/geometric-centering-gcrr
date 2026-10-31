@@ -14,7 +14,7 @@ uv run pytest -q
 
 # Tables (Table OA.1 reads the WAND panel data, so build that first)
 uv run python scripts/wand_robustness_data.py
-uv run python scripts/table_1_appendix_rms.py
+uv run python scripts/table_oa1_rms.py
 uv run python scripts/table_1_main.py
 uv run python scripts/table_2_phase_gap.py
 uv run python scripts/table_3_extrapolation.py

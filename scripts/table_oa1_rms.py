@@ -19,9 +19,9 @@ odd n_eff = n + 1. Footnoted in the output.
 Inputs: data/wand_results.csv (from wand_robustness_data.py).
 
 Outputs (in tables/):
-    table_1_appendix_rms.csv
-    table_1_appendix_rms.md
-    table_1_appendix_rms.xlsx
+    table_oa1_rms.csv
+    table_oa1_rms.md
+    table_oa1_rms.xlsx
 """
 
 from pathlib import Path
@@ -91,15 +91,15 @@ def write_outputs(rows, out_dir):
         display_rows.append(display_row)
     df = pd.DataFrame(display_rows)
 
-    csv_path = out_dir / "table_1_appendix_rms.csv"
+    csv_path = out_dir / "table_oa1_rms.csv"
     df.to_csv(csv_path, index=False, float_format="%.4e")
     print(f"Saved {csv_path}")
 
-    xlsx_path = out_dir / "table_1_appendix_rms.xlsx"
+    xlsx_path = out_dir / "table_oa1_rms.xlsx"
     df.to_excel(xlsx_path, index=False, float_format="%.4e")
     print(f"Saved {xlsx_path}")
 
-    md_path = out_dir / "table_1_appendix_rms.md"
+    md_path = out_dir / "table_oa1_rms.md"
     _write_markdown(df, md_path)
     print(f"Saved {md_path}")
 
