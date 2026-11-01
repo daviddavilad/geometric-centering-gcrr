@@ -12,6 +12,7 @@ authors:
     affiliation: University of New Mexico
     orcid: "https://orcid.org/0009-0007-7826-4697"
 version: 1.0.0
+doi: 10.5281/zenodo.23866510
 date-released: 2026-11-01
 license: MIT
 repository-code: "https://github.com/daviddavilad/geometric-centering-gcrr"

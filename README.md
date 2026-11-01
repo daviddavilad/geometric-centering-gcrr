@@ -3,6 +3,7 @@
 [![Tests](https://github.com/daviddavilad/geometric-centering-gcrr/actions/workflows/tests.yml/badge.svg)](https://github.com/daviddavilad/geometric-centering-gcrr/actions/workflows/tests.yml)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](pyproject.toml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.23866510.svg)](https://doi.org/10.5281/zenodo.23866510)
 
 Code for
 
@@ -71,6 +72,8 @@ The tests check the closed forms in `theory.py` against the exact tree, the two-
 
 ## Citation
 
+Please cite the paper. If you use the code, please also cite the software release.
+
 ```bibtex
 @techreport{chen2026geometric,
   author      = {Chen, Hsuan-Chi and D{\'a}vila, David},
@@ -78,6 +81,16 @@ The tests check the closed forms in `theory.py` against the exact tree, the two-
   institution = {University of New Mexico},
   type        = {Working Paper},
   year        = {2026}
+}
+
+@software{chen2026geometric_code,
+  author    = {Chen, Hsuan-Chi and D{\'a}vila, David},
+  title     = {Geometric Centering in Generalized {Cox--Ross--Rubinstein} Trees: code},
+  version   = {v1.0.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.23866511},
+  url       = {https://doi.org/10.5281/zenodo.23866511}
 }
 ```
 
