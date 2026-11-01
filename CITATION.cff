@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite it as below."
+title: "Geometric Centering in Generalized Cox-Ross-Rubinstein Trees: code"
+type: software
+authors:
+  - family-names: Chen
+    given-names: Hsuan-Chi
+    affiliation: University of New Mexico
+    orcid: "https://orcid.org/0000-0002-6001-1823"
+  - family-names: Dávila
+    given-names: David
+    affiliation: University of New Mexico
+    orcid: "https://orcid.org/0009-0007-7826-4697"
+version: 1.0.0
+date-released: 2026-11-01
+license: MIT
+repository-code: "https://github.com/daviddavilad/geometric-centering-gcrr"
