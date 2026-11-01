@@ -9,8 +9,14 @@ The GCRR family shares the jump structure
 and differs only in how lambda is chosen:
     - crr:           lambda = 1
     - gcrr_fixed:    lambda = const
-    - gcrr_xpc:      lambda chosen so a terminal node sits ON the strike (even n)
+    - gcrr_xpc:      lambda chosen so the central node sits on the strike (even n)
     - gcrr_gc:       lambda chosen by the parity-free geometric-center condition
+
+tian_1999 and joshi_2009 use Tian's flexible form instead,
+    u, d = exp(+/- sigma * sqrt(dt) + lambda * sigma^2 * dt),
+with a tilt lambda in place of a stretch. Tian puts a terminal node on
+the strike; Joshi (odd n only) puts the strike midway between the two
+central nodes.
 """
 
 from __future__ import annotations
@@ -110,9 +116,10 @@ def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
     """Tian (1999) strike-aligned flexible binomial.
 
     Places the terminal node (n, j_0) exactly at the strike K by solving
-    Tian (1999) eqs. (11) and (13) for the tilt parameter lambda. Yields
-    smooth (essentially monotone) O(1/n) convergence and admits Richardson
-    extrapolation to O(1/n^2).
+    Tian (1999) eqs. (11) and (13) for the tilt parameter lambda. The
+    strike node is not the central one, and the error jumps wherever
+    j_0 - n // 2 changes, that is, wherever the strike moves one node
+    further from the center (see Figure 3 and tests/test_errors.py).
 
     Procedure:
         1. CRR baseline factors u_0 = e^{sigma*sqrt(dt)}, d_0 = 1/u_0.
@@ -122,9 +129,6 @@ def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
         3. Solve for the strike-aligning lambda (eq. 13):
                lam = (log(K/S) - (2*j_0 - n)*sigma*sqrt(dt)) / (n*sigma^2*dt)
         4. Return flexible parameters with that lambda.
-
-    Verified against Tian (1999) Tables I and II in the public option-pricing
-    repository (28 paper-reproduction tests pass to 4-6 decimal places).
     """
     dt = T / n
     sqrt_dt = np.sqrt(dt)
@@ -147,9 +151,10 @@ def tian_1999(S, K, T, r, sigma, n) -> TreeParameters:
 def joshi_2009(S, K, T, r, sigma, n) -> TreeParameters:
     """Joshi (2009) odd-step centered tree.
 
-    A *drift-based* parameterization (structurally distinct from GCRR's
-    stretch and Tian's tilt). The drift mu shifts every step uniformly,
-    keeping the up/down log-step size symmetric at +/- sigma*sqrt(dt).
+    Tian's flexible tree with tilt lambda = mu / sigma^2: the drift mu
+    shifts every step by the same amount, and the up and down log-steps
+    stay symmetric at +/- sigma*sqrt(dt). Where Tian puts a terminal node
+    on the strike, Joshi centers the tree on it.
 
     Construction (Joshi 2009, Sections 3-4):
         mu = log(K/S0) / T              # places strike at log-center
@@ -157,10 +162,9 @@ def joshi_2009(S, K, T, r, sigma, n) -> TreeParameters:
         d  = exp(mu*dt - sigma*sqrt(dt))
         p  = (e^{r*dt} - d) / (u - d)
 
-    Requires n odd; the construction's symmetry exploits the even number
-    of terminal nodes 2N+2 with the strike sitting exactly between
-    indices N and N+1. We use n directly when odd, and n+1 when even,
-    following the paper's convention.
+    Requires n odd: with n = 2N+1 there are 2N+2 terminal nodes, and the
+    strike sits exactly between indices N and N+1. Joshi defines the tree
+    for odd n only; we use n directly when odd and n+1 when even.
 
     The resulting tree admits a *complete* asymptotic expansion in 1/n
     (no oscillating term), so Richardson extrapolation works cleanly.

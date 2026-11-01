@@ -72,8 +72,9 @@ def test_crr_scaled_error_does_not_stabilize():
 
 def test_tian_1999_has_step_discontinuities_otm():
     """Tian (1999) strike-aligned scheme has discontinuities in n where the
-    nearest-integer j_0 = round(eta) jumps. The scaled-error sequence is
-    therefore piecewise-smooth but not continuous in n.
+    strike node moves relative to the center, i.e. where j_0 - n // 2
+    changes. The scaled-error sequence is therefore piecewise-smooth but
+    not continuous in n.
 
     GCRR-GC avoids this because its lambda formula contains no integer
     rounding -- lambda_n = (kappa_n + sqrt(kappa_n^2 + 4))/2 is continuous in n.

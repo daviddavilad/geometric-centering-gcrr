@@ -1,9 +1,8 @@
-"""Generic binomial backward-induction pricer and tree-parameter interface.
+"""Binomial pricers and the tree-parameter interface.
 
-Scheme-agnostic: every scheme produces a TreeParameters, and the pricer
-consumes it identically. This is the same architecture as the public
-option-pricing repo, generalized to carry the stretch parameter and
-strike-location bookkeeping that the GCRR family needs.
+Every scheme returns a TreeParameters, and binomial_price prices any of
+them by backward induction. two_tail_call_price is the closed form of
+Proposition 3.1 for GCRR-GC.
 """
 
 from __future__ import annotations
