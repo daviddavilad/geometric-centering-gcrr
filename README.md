@@ -1,5 +1,9 @@
 # Geometric Centering in Generalized Cox–Ross–Rubinstein Trees
 
+[![Tests](https://github.com/daviddavilad/geometric-centering-gcrr/actions/workflows/tests.yml/badge.svg)](https://github.com/daviddavilad/geometric-centering-gcrr/actions/workflows/tests.yml)
+[![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-blue)](pyproject.toml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+
 Code for
 
 > Chen, H.-C. and Dávila, D., Geometric centering in generalized Cox–Ross–Rubinstein trees. Working Paper, University of New Mexico, 2026.
