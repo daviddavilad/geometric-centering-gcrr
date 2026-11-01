@@ -18,6 +18,8 @@ dependencies = [
     "sympy>=1.14.0",
     "mpmath>=1.3",
 ]
+[project.urls]
+Repository = "https://github.com/daviddavilad/geometric-centering-gcrr"
 
 [dependency-groups]
 dev = [

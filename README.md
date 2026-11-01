@@ -1,121 +1,82 @@
-# GCRR-GC Research
+# Geometric Centering in Generalized Cox–Ross–Rubinstein Trees
 
-Private research repository. Joint work with Dr. Hsuan-Chi Chen (UNM).
-Contains preliminary, unpublished results.
+Code for
 
-**Do not make public or circulate** until the paper is submitted for
-journal publication.
+> Chen, H.-C. and Dávila, D., Geometric centering in generalized Cox–Ross–Rubinstein trees. Working Paper, University of New Mexico, 2026.
 
-## Paper
+The paper proposes GCRR-GC, a binomial tree whose stretch parameter places the strike at the geometric center of the terminal lattice for both even and odd numbers of steps (Proposition 2.1). This repository implements GCRR-GC and five benchmark trees, checks the paper's closed-form results numerically, and regenerates every table and figure in the paper and its Online Appendix.
 
-*Lattice Geometry, Strike-Location Error, and Parity-Free Smooth
-Convergence in Binomial Option Pricing* by Hsuan-Chi Chen (UNM) and
-David Davila (UNM).
+## Quick start
 
-The paper introduces GCRR-GC, a parity-free centered binomial scheme
-for European option pricing, and proves phase-wise smooth O(1/n)
-convergence (Theorem 7.1) with a closed-form phase gap (Corollary 7.2).
-
-## Structure
-
-- `src/gcrr/` — core library (7 modules)
-- `scripts/` — figure, table, and verification scripts
-- `tests/` — correctness tests (39 tests, all passing)
-- `figures/` — generated PDF and PNG figures
-- `tables/` — generated CSV and Markdown tables
-- `data/` — numerical results consumed by table scripts
-- `verification/` — handwritten math verification notes (iPad scans)
-
-## Library modules (`src/gcrr/`)
-
-- `schemes.py` — binomial scheme parameterizations (CRR, GCRR-GC,
-  fixed-stretch GCRR, GCRR-XPC (Chung-Shih 2007), Tian (1999),
-  Joshi (2009)). Each returns a `TreeParameters` object.
-- `pricer.py` — generic backward-induction pricer. Scheme-agnostic:
-  consumes any `TreeParameters` and returns European or American prices.
-- `black_scholes.py` — Black-Scholes reference prices for calls, puts,
-  and strict digital options.
-- `digital.py` — strict and half-node corrected digital pricing on
-  binomial trees (Section 9.3).
-- `diagnostics.py` — strike-location diagnostics: continuous strike
-  index $\gamma_n$, weak/strict upper thresholds $J_n$ and $J_n^+$,
-  centered log-location coordinate $\Delta_n$.
-- `errors.py` — phase-separated error computation for scaled-error
-  figures.
-- `plotting.py` — shared plot style, scheme color and label conventions.
-
-## Reproducing the numerical section
-
-**Requirements:** Python 3.11+, `uv` for dependency management.
+Requires Python 3.11 or later and [uv](https://docs.astral.sh/uv/).
 
 ```bash
-uv sync            # install dependencies
-uv run pytest -v   # run tests (should show 39 passing)
+git clone https://github.com/daviddavilad/geometric-centering-gcrr.git
+cd geometric-centering-gcrr
+./reproduce.sh
 ```
 
-Run figures (each script produces PDF and PNG in `figures/`):
+`reproduce.sh` installs the locked dependencies, runs the test suite, and regenerates all tables and figures. It takes about 30 seconds on a desktop.
+
+## Paper outputs
+
+| Paper | Script | Output |
+|---|---|---|
+| Table 1 | `scripts/table_1_main.py` | `tables/table_1_main.{csv,md}` |
+| Table 2 | `scripts/table_2_phase_gap.py` | `tables/table_2_phase_gap.{csv,md}` |
+| Table 3 | `scripts/table_3_extrapolation.py` | `tables/table_3_extrapolation.{csv,md}` |
+| Table OA.1 | `scripts/wand_robustness_data.py`, then `scripts/table_oa1_rms.py` | `tables/table_oa1_rms.{csv,md}` |
+| Figure 1 | `scripts/figure_raw_errors.py` | `figures_paper/raw_errors_{itm,otm}.{pdf,png}` |
+| Figure 2 | `scripts/figure_scaled_errors.py` | `figures_paper/scaled_errors_{itm,otm}.{pdf,png}` |
+| Figure 3 | `scripts/figure_delta_and_threshold.py` | `figures_paper/delta_and_threshold.{pdf,png}` |
+| Figure OA.1 | `scripts/figure_digital_errors.py` | `figures_paper/digital_errors_{itm,otm}.{pdf,png}` |
+| Figure OA.2 | `scripts/figure_digital_corrected_errors.py` | `figures_paper/digital_corrected_errors_{itm,otm}.{pdf,png}` |
+| Eq. (5) and Appendix B | `scripts/verify_tail_expansion.py`, `scripts/verify_appendix_B_third_term.py` | `scripts/*_output.txt` |
+
+Files ending in `_itm` use K = 95 and files ending in `_otm` use K = 105. Each script also runs on its own, for example `uv run python scripts/figure_scaled_errors.py`. Table OA.1 reads `data/wand_results.csv`, so run `wand_robustness_data.py` first. Spreadsheet copies of the tables (`tables/*.xlsx`) are written alongside the CSV files but not tracked.
+
+## Numerical precision
+
+- **Tables 2 and 3 use 40-digit arithmetic** (mpmath). Table 2 fits n up to 100,000, and Richardson extrapolation in Table 3 amplifies rounding error by a factor of about n, so double precision would contaminate both. These two tables come out identical on any machine.
+- **Everything else uses double precision.** On another operating system, the figures, Table 1, Table OA.1 and the eq. (5) check can differ in trailing digits, with no visible change. The committed outputs were generated on Linux.
+
+## Package layout
+
+The `gcrr` package lives in `src/gcrr`:
+
+| Module | Contents |
+|---|---|
+| `schemes.py` | Tree parameterizations: CRR, fixed-stretch GCRR, GCRR-XPC (Chung and Shih 2007), GCRR-GC, Tian (1999), Joshi (2009) |
+| `pricer.py` | Backward-induction pricer and the two-tail call price of Proposition 3.1 |
+| `diagnostics.py` | Strike location in the terminal lattice: θ_n, Δ_n and the exercise threshold m_n (Section 2.1) |
+| `theory.py` | Closed forms: ρ_B and ρ_S (Appendix A.3), A_η (eq. 8), the phase gap (Corollary 3.3), digital coefficients (Appendix C.3) |
+| `digital.py` | Strict and half-node digital prices (Section 4) |
+| `extrapolation.py` | Same-phase and adjacent Richardson extrapolation, phase adjustment (Section 3.3) |
+| `errors.py` | Phase-separated errors and least-squares fits of the leading constant |
+| `high_precision.py` | 40-digit GCRR-GC and Black–Scholes call prices |
+| `black_scholes.py` | Black–Scholes call and digital prices |
+| `plotting.py` | Shared figure style |
+
+## Tests
 
 ```bash
-uv run python scripts/figure_raw_errors.py
-uv run python scripts/figure_scaled_errors.py
-uv run python scripts/figure_delta_diagnostic.py
-uv run python scripts/figure_delta_and_threshold.py
-uv run python scripts/figure_digital_errors.py
-uv run python scripts/figure_digital_corrected_errors.py
+uv run pytest
 ```
 
-Run tables (each script produces CSV and Markdown in `tables/`):
+The tests check the closed forms in `theory.py` against the exact tree, the two-tail pricer against backward induction, fitted A_η against Theorem 3.2, the convergence rates of the extrapolation schemes, the 40-digit prices against double precision, and the strike-location properties of Proposition 2.1.
 
-```bash
-uv run python scripts/wand_robustness_data.py       # ~10s; produces data/wand_results.csv
-uv run python scripts/table_1_representative_errors.py
-uv run python scripts/table_2_phase_gap.py
+## Citation
+
+```bibtex
+@techreport{chen2026geometric,
+  author      = {Chen, Hsuan-Chi and D{\'a}vila, David},
+  title       = {Geometric Centering in Generalized {Cox--Ross--Rubinstein} Trees},
+  institution = {University of New Mexico},
+  type        = {Working Paper},
+  year        = {2026}
+}
 ```
 
-Run verification scripts (empirical checks of specific claims):
+## License
 
-```bash
-uv run python scripts/verify_appendix_B_third_term.py
-uv run python scripts/verify_phase_gap_wand.py
-uv run python scripts/verify_proposition_B1.py
-uv run python scripts/verify_phase_gap.py
-```
-
-## Figure and table mapping
-
-Per Chen §9.5 (revised draft):
-
-| Paper item | Script | Output |
-|:-----------|:-------|:-------|
-| Figure 1 (raw errors) | `figure_raw_errors.py` | `raw_errors_itm.pdf`, `raw_errors_otm.pdf` |
-| Figure 2 (scaled errors) | `figure_scaled_errors.py` | `scaled_errors_itm.pdf`, `scaled_errors_otm.pdf` |
-| Figure 3 (Δ + threshold) | `figure_delta_and_threshold.py` | `delta_and_threshold.pdf` |
-| Figure 4 (strict digital) | `figure_digital_errors.py` | `digital_errors_itm.pdf`, `digital_errors_otm.pdf` |
-| Figure 5 (corrected digital) | `figure_digital_corrected_errors.py` | `digital_corrected_errors_itm.pdf`, `digital_corrected_errors_otm.pdf` |
-| Table 1a (absolute errors) | `table_1_representative_errors.py` | `table_1a_absolute_errors.csv/md` |
-| Table 1b (scaled errors) | `table_1_representative_errors.py` | `table_1b_scaled_errors.csv/md` |
-| Table 2 (phase gap) | `table_2_phase_gap.py` | `table_2_phase_gap.csv/md` |
-
-Primary non-ATM case per Chen §9.4: $S_0 = 100$, $X \in \{95, 105\}$,
-$T = 0.5$, $\sigma = 0.20$, $r = 0.06$.
-
-WAND-style robustness panel per Chen §9.4: $S_0 = 40$, $X \in \{35, 45\}$,
-$\sigma \in \{0.20, 0.40\}$, $T \in \{0.25, 0.50\}$, $r = 0.06$.
-
-ATM diagnostic figures (K=100, T=1, r=0.05) are archived under
-`figures/*_atm.{pdf,png}`. Per Chen §9.4 revised draft, ATM is a
-degenerate case moved to the online appendix.
-
-## Test suite (`tests/`)
-
-- `test_schemes.py` — scheme parameterization correctness, convergence
-  to Black-Scholes, parity restrictions.
-- `test_diagnostics.py` — strike-location coordinates, floating-point
-  robustness at exact-alignment cases, unified strict threshold claim
-  of GCRR-GC.
-- `test_errors.py` — phase-separated error infrastructure.
-- `test_digital.py` — strict and half-node corrected digital pricing,
-  including the exact symmetry $\Psi^*_{N,0}(1/2) = \Psi^*_{N,1}(1/2) = 1/2$
-  and the O(1/√n) central-atom discrepancy characterization.
-
-Run all tests: `uv run pytest -v`.
+MIT. See [LICENSE](LICENSE).
